@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,25 +13,70 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Transaction } from '@/types/database';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { ArrowUpCircle, ArrowDownCircle, Trash2, Search, Edit } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import TransactionFilters, { FilterPeriod } from './TransactionFilters';
+import EmptyState from '@/components/shared/EmptyState';
+import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual } from 'date-fns';
 
 interface TransactionListProps {
   transactions: Transaction[];
   isLoading?: boolean;
   onDelete?: (transaction: Transaction) => void;
   onEdit?: (transaction: Transaction) => void;
+  showFilters?: boolean;
 }
 
-export default function TransactionList({ transactions, isLoading, onDelete, onEdit }: TransactionListProps) {
+export default function TransactionList({
+  transactions,
+  isLoading,
+  onDelete,
+  onEdit,
+  showFilters = true,
+}: TransactionListProps) {
   const [search, setSearch] = useState('');
+  const [period, setPeriod] = useState<FilterPeriod>('all');
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
-  const filteredTransactions = transactions.filter(
-    (t) =>
-      t.description.toLowerCase().includes(search.toLowerCase()) ||
-      t.category?.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions;
+
+    // Filter by search
+    if (search) {
+      filtered = filtered.filter(
+        (t) =>
+          t.description.toLowerCase().includes(search.toLowerCase()) ||
+          t.category?.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Filter by period
+    if (period !== 'all') {
+      const today = new Date();
+      let startDate: Date;
+
+      switch (period) {
+        case 'today':
+          startDate = startOfDay(today);
+          break;
+        case 'week':
+          startDate = startOfWeek(today, { weekStartsOn: 0 });
+          break;
+        case 'month':
+          startDate = startOfMonth(today);
+          break;
+        default:
+          startDate = new Date(0);
+      }
+
+      filtered = filtered.filter((t) => {
+        const transactionDate = new Date(t.date);
+        return isAfter(transactionDate, startDate) || isEqual(transactionDate, startDate);
+      });
+    }
+
+    return filtered;
+  }, [transactions, search, period]);
 
   const handleConfirmDelete = () => {
     if (transactionToDelete && onDelete) {
@@ -66,21 +110,30 @@ export default function TransactionList({ transactions, isLoading, onDelete, onE
     <>
       <Card>
         <CardContent className="p-4">
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar transações..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          {/* Filters */}
+          {showFilters && (
+            <div className="mb-4">
+              <TransactionFilters
+                search={search}
+                onSearchChange={setSearch}
+                period={period}
+                onPeriodChange={setPeriod}
+              />
+            </div>
+          )}
 
           {filteredTransactions.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Nenhuma transação encontrada</p>
-            </div>
+            transactions.length === 0 ? (
+              <EmptyState
+                icon={Receipt}
+                title="Nenhuma transação ainda"
+                description="Comece registrando sua primeira receita ou despesa para acompanhar suas finanças."
+              />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>Nenhuma transação encontrada para os filtros selecionados</p>
+              </div>
+            )
           ) : (
             <div className="space-y-2">
               {filteredTransactions.map((transaction) => (

@@ -22,6 +22,7 @@ import {
   LogOut,
   Menu,
   Bell,
+  PiggyBank,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/receitas', label: 'Receitas', icon: ArrowUpCircle },
   { href: '/despesas', label: 'Despesas', icon: ArrowDownCircle },
   { href: '/contas', label: 'Contas', icon: Wallet },
+  { href: '/orcamentos', label: 'Orçamentos', icon: PiggyBank },
   { href: '/metas', label: 'Metas', icon: Target },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
 ];
