@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Accounts from "./pages/Accounts";
+import Budgets from "./pages/Budgets";
 import Goals from "./pages/Goals";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -67,6 +68,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Accounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orcamentos"
+        element={
+          <ProtectedRoute>
+            <Budgets />
           </ProtectedRoute>
         }
       />

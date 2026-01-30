@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import StatCard from '@/components/dashboard/StatCard';
+import AnimatedStatCard from '@/components/dashboard/AnimatedStatCard';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import ExpensesByCategory from '@/components/dashboard/ExpensesByCategory';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
+import BudgetProgress from '@/components/dashboard/BudgetProgress';
+import MonthProjection from '@/components/dashboard/MonthProjection';
 import TransactionForm from '@/components/transactions/TransactionForm';
+import TransferForm from '@/components/transactions/TransferForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +17,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useSavingsGoals } from '@/hooks/useSavingsGoals';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
+import { useTransfer } from '@/hooks/useTransfer';
 import { formatCurrency, formatMonthYear } from '@/lib/format';
 import {
   Wallet,
@@ -24,6 +28,7 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { TransactionType } from '@/types/database';
 
@@ -32,6 +37,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('expense');
 
   const month = selectedDate.getMonth() + 1;
@@ -41,6 +47,7 @@ export default function Dashboard() {
   const { totalBalance, isLoading: isLoadingAccounts } = useAccounts();
   const { activeGoals } = useSavingsGoals();
   const { dueReminders } = useRecurringReminders();
+  const { createTransfer } = useTransfer();
 
   // All transactions for charts
   const { transactions: allTransactions } = useTransactions();
@@ -92,12 +99,16 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handleOpenForm('income')}>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => setIsTransferOpen(true)}>
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Transferir
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleOpenForm('income')}>
               <ArrowUpCircle className="w-4 h-4 mr-2" />
               Receita
             </Button>
-            <Button onClick={() => handleOpenForm('expense')}>
+            <Button size="sm" onClick={() => handleOpenForm('expense')}>
               <ArrowDownCircle className="w-4 h-4 mr-2" />
               Despesa
             </Button>
@@ -126,29 +137,29 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* Stats Grid */}
+        {/* Stats Grid with Animated Values */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
+          <AnimatedStatCard
             title="Saldo Total"
-            value={formatCurrency(totalBalance)}
+            value={totalBalance}
             icon={Wallet}
             variant="balance"
           />
-          <StatCard
+          <AnimatedStatCard
             title="Receitas do mês"
-            value={formatCurrency(totalIncome)}
+            value={totalIncome}
             icon={ArrowUpCircle}
             variant="income"
           />
-          <StatCard
+          <AnimatedStatCard
             title="Despesas do mês"
-            value={formatCurrency(totalExpenses)}
+            value={totalExpenses}
             icon={ArrowDownCircle}
             variant="expense"
           />
-          <StatCard
+          <AnimatedStatCard
             title="Economia do mês"
-            value={formatCurrency(economy)}
+            value={economy}
             icon={TrendingUp}
             trend={
               economy !== 0
@@ -156,6 +167,12 @@ export default function Dashboard() {
                 : undefined
             }
           />
+        </div>
+
+        {/* Financial Intelligence Cards */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <MonthProjection month={month} year={year} />
+          <BudgetProgress month={month} year={year} />
         </div>
 
         {/* Goals Summary */}
@@ -225,6 +242,14 @@ export default function Dashboard() {
           onClose={() => setIsFormOpen(false)}
           onSubmit={(data) => createTransaction.mutate(data)}
           isLoading={createTransaction.isPending}
+        />
+
+        {/* Transfer Form */}
+        <TransferForm
+          isOpen={isTransferOpen}
+          onClose={() => setIsTransferOpen(false)}
+          onSubmit={(data) => createTransfer.mutate(data)}
+          isLoading={createTransfer.isPending}
         />
       </div>
     </AppLayout>
