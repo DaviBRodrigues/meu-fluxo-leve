@@ -11,6 +11,7 @@ import Expenses from "./pages/Expenses";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Goals from "./pages/Goals";
+import Investments from "./pages/Investments";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -68,6 +69,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Accounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/investimentos"
+        element={
+          <ProtectedRoute>
+            <Investments />
           </ProtectedRoute>
         }
       />

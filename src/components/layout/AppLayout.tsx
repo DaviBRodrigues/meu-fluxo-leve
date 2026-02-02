@@ -23,6 +23,7 @@ import {
   Menu,
   Bell,
   PiggyBank,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/receitas', label: 'Receitas', icon: ArrowUpCircle },
   { href: '/despesas', label: 'Despesas', icon: ArrowDownCircle },
   { href: '/contas', label: 'Contas', icon: Wallet },
+  { href: '/investimentos', label: 'Investimentos', icon: TrendingUp },
   { href: '/orcamentos', label: 'Orçamentos', icon: PiggyBank },
   { href: '/metas', label: 'Metas', icon: Target },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },

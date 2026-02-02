@@ -127,6 +127,140 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_categories: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string | null
+          id: string
+          is_default: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investment_transactions: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          investment_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          investment_id: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          investment_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_transactions_investment_id_fkey"
+            columns: ["investment_id"]
+            isOneToOne: false
+            referencedRelation: "investments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investments: {
+        Row: {
+          category_id: string | null
+          color: string
+          created_at: string
+          current_amount: number
+          icon: string | null
+          id: string
+          initial_amount: number
+          name: string
+          notes: string | null
+          target_amount: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          color?: string
+          created_at?: string
+          current_amount?: number
+          icon?: string | null
+          id?: string
+          initial_amount?: number
+          name: string
+          notes?: string | null
+          target_amount?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          color?: string
+          created_at?: string
+          current_amount?: number
+          icon?: string | null
+          id?: string
+          initial_amount?: number
+          name?: string
+          notes?: string | null
+          target_amount?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investments_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "investment_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

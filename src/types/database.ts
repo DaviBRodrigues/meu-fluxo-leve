@@ -1,5 +1,6 @@
 export type TransactionType = 'income' | 'expense';
 export type RecurrenceType = 'fixed' | 'variable';
+export type InvestmentTransactionType = 'deposit' | 'withdrawal' | 'yield';
 
 export interface Profile {
   id: string;
@@ -106,5 +107,47 @@ export interface RecurringReminder {
   created_at: string;
   // Joined fields
   category?: Category;
+  account?: Account;
+}
+
+export interface InvestmentCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface Investment {
+  id: string;
+  user_id: string;
+  name: string;
+  category_id: string | null;
+  current_amount: number;
+  initial_amount: number;
+  target_amount: number | null;
+  color: string;
+  icon: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  category?: InvestmentCategory;
+}
+
+export interface InvestmentTransaction {
+  id: string;
+  user_id: string;
+  investment_id: string;
+  account_id: string;
+  type: InvestmentTransactionType;
+  amount: number;
+  description: string | null;
+  date: string;
+  created_at: string;
+  // Joined fields
+  investment?: Investment;
   account?: Account;
 }
