@@ -119,6 +119,7 @@ export default function Income() {
           transactions={transactions}
           isLoading={isLoading}
           onDelete={(transaction) => deleteTransaction.mutate(transaction)}
+          isDeleting={deleteTransaction.isPending}
         />
 
         {/* Form */}

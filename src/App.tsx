@@ -14,6 +14,7 @@ import Goals from "./pages/Goals";
 import Investments from "./pages/Investments";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -109,6 +110,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/historico"
+        element={
+          <ProtectedRoute>
+            <History />
           </ProtectedRoute>
         }
       />

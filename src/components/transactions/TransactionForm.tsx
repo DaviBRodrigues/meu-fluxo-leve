@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
@@ -13,11 +12,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CurrencyInput } from '@/components/shared/CurrencyInput';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCategories } from '@/hooks/useCategories';
 import { useAccounts } from '@/hooks/useAccounts';
 import { TransactionType, Category, Account } from '@/types/database';
+import { Input } from '@/components/ui/input';
 
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória').max(100),
@@ -127,11 +128,12 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor (R$)</Label>
-            <Input
+            <Label htmlFor="amount">Valor</Label>
+            <CurrencyInput
               id="amount"
               placeholder="0,00"
-              {...register('amount')}
+              value={watch('amount')}
+              onChange={(value) => setValue('amount', value)}
             />
             {errors.amount && (
               <p className="text-sm text-destructive">{errors.amount.message}</p>

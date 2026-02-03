@@ -53,6 +53,48 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_logs: {
+        Row: {
+          action_type: string
+          amount: number | null
+          created_at: string
+          entity_description: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_deleted: boolean
+          new_data: Json | null
+          original_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          amount?: number | null
+          created_at?: string
+          entity_description: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_deleted?: boolean
+          new_data?: Json | null
+          original_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          amount?: number | null
+          created_at?: string
+          entity_description?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_deleted?: boolean
+          new_data?: Json | null
+          original_data?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           amount: number
