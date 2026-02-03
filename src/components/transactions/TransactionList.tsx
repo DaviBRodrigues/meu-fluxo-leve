@@ -1,16 +1,8 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Transaction } from '@/types/database';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt } from 'lucide-react';
@@ -25,6 +17,7 @@ interface TransactionListProps {
   onDelete?: (transaction: Transaction) => void;
   onEdit?: (transaction: Transaction) => void;
   showFilters?: boolean;
+  isDeleting?: boolean;
 }
 
 export default function TransactionList({
@@ -33,6 +26,7 @@ export default function TransactionList({
   onDelete,
   onEdit,
   showFilters = true,
+  isDeleting = false,
 }: TransactionListProps) {
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState<FilterPeriod>('all');
@@ -83,6 +77,12 @@ export default function TransactionList({
       onDelete(transactionToDelete);
       setTransactionToDelete(null);
     }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, x: -100 },
   };
 
   if (isLoading) {
@@ -136,98 +136,99 @@ export default function TransactionList({
             )
           ) : (
             <div className="space-y-2">
-              {filteredTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
-                >
-                  <div
-                    className={cn(
-                      'w-12 h-12 rounded-lg flex items-center justify-center shrink-0',
-                      transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
-                    )}
+              <AnimatePresence mode="popLayout">
+                {filteredTransactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                    layout
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
                   >
-                    {transaction.type === 'income' ? (
-                      <ArrowUpCircle className="w-6 h-6 text-income" />
-                    ) : (
-                      <ArrowDownCircle className="w-6 h-6 text-expense" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{transaction.description}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ backgroundColor: transaction.category?.color }}
-                      />
-                      <span>{transaction.category?.name}</span>
-                      <span>•</span>
-                      <span>{formatDate(transaction.date)}</span>
-                      {transaction.recurrence === 'fixed' && (
-                        <>
-                          <span>•</span>
-                          <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Fixa</span>
-                        </>
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-lg flex items-center justify-center shrink-0',
+                        transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
+                      )}
+                    >
+                      {transaction.type === 'income' ? (
+                        <ArrowUpCircle className="w-6 h-6 text-income" />
+                      ) : (
+                        <ArrowDownCircle className="w-6 h-6 text-expense" />
                       )}
                     </div>
-                  </div>
 
-                  <p
-                    className={cn(
-                      'font-bold text-lg whitespace-nowrap',
-                      transaction.type === 'income' ? 'text-income' : 'text-expense'
-                    )}
-                  >
-                    {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Number(transaction.amount))}
-                  </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{transaction.description}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ backgroundColor: transaction.category?.color }}
+                        />
+                        <span>{transaction.category?.name}</span>
+                        <span>•</span>
+                        <span>{formatDate(transaction.date)}</span>
+                        {transaction.recurrence === 'fixed' && (
+                          <>
+                            <span>•</span>
+                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Fixa</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onEdit(transaction)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => setTransactionToDelete(transaction)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    <p
+                      className={cn(
+                        'font-bold text-lg whitespace-nowrap',
+                        transaction.type === 'income' ? 'text-income' : 'text-expense'
+                      )}
+                    >
+                      {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Number(transaction.amount))}
+                    </p>
+
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onEdit(transaction)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => setTransactionToDelete(transaction)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!transactionToDelete} onOpenChange={() => setTransactionToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a transação "{transactionToDelete?.description}"?
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        isOpen={!!transactionToDelete}
+        onClose={() => setTransactionToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar exclusão"
+        description="Tem certeza que deseja remover esta transação?"
+        itemName={transactionToDelete?.description}
+        affectsBalance={true}
+        isLoading={isDeleting}
+      />
     </>
   );
 }

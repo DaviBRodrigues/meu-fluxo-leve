@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import AnimatedStatCard from '@/components/dashboard/AnimatedStatCard';
@@ -8,11 +9,12 @@ import ExpensesByCategory from '@/components/dashboard/ExpensesByCategory';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransferForm from '@/components/transactions/TransferForm';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useSavingsGoals } from '@/hooks/useSavingsGoals';
@@ -28,9 +30,23 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  ArrowRightLeft,
 } from 'lucide-react';
 import { TransactionType } from '@/types/database';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -54,9 +70,20 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Skeleton className="w-32 h-32 rounded-full" />
-      </div>
+      <AppLayout>
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonCard key={i} variant="stat" />
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <SkeletonCard variant="chart" />
+            <SkeletonCard variant="chart" />
+          </div>
+          <SkeletonCard variant="list" />
+        </div>
+      </AppLayout>
     );
   }
 
@@ -82,9 +109,14 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
+        {/* Header with Month Navigation */}
+        <motion.div variants={itemVariants} className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <div className="flex items-center gap-2 mt-1">
@@ -99,46 +131,43 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={() => setIsTransferOpen(true)}>
-              <ArrowRightLeft className="w-4 h-4 mr-2" />
-              Transferir
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleOpenForm('income')}>
-              <ArrowUpCircle className="w-4 h-4 mr-2" />
-              Receita
-            </Button>
-            <Button size="sm" onClick={() => handleOpenForm('expense')}>
-              <ArrowDownCircle className="w-4 h-4 mr-2" />
-              Despesa
-            </Button>
-          </div>
-        </div>
+        </motion.div>
+
+        {/* Quick Actions - Prominent Section */}
+        <motion.div variants={itemVariants}>
+          <QuickActions
+            onNewIncome={() => handleOpenForm('income')}
+            onNewExpense={() => handleOpenForm('expense')}
+            onTransfer={() => setIsTransferOpen(true)}
+          />
+        </motion.div>
 
         {/* Reminders Alert */}
         {dueReminders.length > 0 && (
-          <Card className="border-warning/50 bg-warning/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-warning" />
+          <motion.div variants={itemVariants}>
+            <Card className="border-warning/50 bg-warning/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-warning" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Lembretes pendentes</p>
+                    <p className="text-sm text-muted-foreground">
+                      Você tem {dueReminders.length} despesa(s) fixa(s) para registrar este mês
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/configuracoes')}>
+                    Ver lembretes
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">Lembretes pendentes</p>
-                  <p className="text-sm text-muted-foreground">
-                    Você tem {dueReminders.length} despesa(s) fixa(s) para registrar este mês
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/configuracoes')}>
-                  Ver lembretes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
         {/* Stats Grid with Animated Values */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatedStatCard
             title="Saldo Total"
             value={totalBalance}
@@ -167,73 +196,79 @@ export default function Dashboard() {
                 : undefined
             }
           />
-        </div>
+        </motion.div>
 
         {/* Financial Intelligence Cards */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
           <MonthProjection month={month} year={year} />
           <BudgetProgress month={month} year={year} />
-        </div>
+        </motion.div>
 
         {/* Goals Summary */}
         {activeGoals.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center justify-between">
-                <span>Metas Ativas</span>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/metas')}>
-                  Ver todas
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {activeGoals.slice(0, 3).map((goal) => {
-                  const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
-                  return (
-                    <div
-                      key={goal.id}
-                      className="min-w-[200px] p-3 rounded-lg border bg-card"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: goal.color }}
-                        />
-                        <span className="font-medium text-sm truncate">{goal.name}</span>
-                      </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${progress}%`, backgroundColor: goal.color }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatCurrency(Number(goal.current_amount))} / {formatCurrency(Number(goal.target_amount))}
-                      </p>
-                    </div>
-                  );
-                })}
-                <button
-                  onClick={() => navigate('/metas')}
-                  className="min-w-[200px] p-3 rounded-lg border border-dashed flex items-center justify-center gap-2 text-muted-foreground hover:bg-accent transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="text-sm">Nova meta</span>
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div variants={itemVariants}>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center justify-between">
+                  <span>Metas Ativas</span>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/metas')}>
+                    Ver todas
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {activeGoals.slice(0, 3).map((goal) => {
+                    const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
+                    return (
+                      <motion.div
+                        key={goal.id}
+                        whileHover={{ scale: 1.02 }}
+                        className="min-w-[200px] p-3 rounded-lg border bg-card"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: goal.color }}
+                          />
+                          <span className="font-medium text-sm truncate">{goal.name}</span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%`, backgroundColor: goal.color }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatCurrency(Number(goal.current_amount))} / {formatCurrency(Number(goal.target_amount))}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => navigate('/metas')}
+                    className="min-w-[200px] p-3 rounded-lg border border-dashed flex items-center justify-center gap-2 text-muted-foreground hover:bg-accent transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm">Nova meta</span>
+                  </motion.button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
         {/* Charts */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
           <MonthlyChart transactions={allTransactions} isLoading={isLoadingTransactions} />
           <ExpensesByCategory transactions={transactions} isLoading={isLoadingTransactions} />
-        </div>
+        </motion.div>
 
         {/* Recent Transactions */}
-        <RecentTransactions transactions={transactions} isLoading={isLoadingTransactions} />
+        <motion.div variants={itemVariants}>
+          <RecentTransactions transactions={transactions} isLoading={isLoadingTransactions} />
+        </motion.div>
 
         {/* Transaction Form */}
         <TransactionForm
@@ -251,7 +286,7 @@ export default function Dashboard() {
           onSubmit={(data) => createTransfer.mutate(data)}
           isLoading={createTransfer.isPending}
         />
-      </div>
+      </motion.div>
     </AppLayout>
   );
 }

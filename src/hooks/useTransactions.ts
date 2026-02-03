@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction, TransactionType } from '@/types/database';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format';
+import { useActivityLogs } from './useActivityLogs';
+import { Json } from '@/integrations/supabase/types';
 
 interface TransactionFilters {
   month?: number;
@@ -15,6 +18,7 @@ interface TransactionFilters {
 export function useTransactions(filters?: TransactionFilters) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { logActivity } = useActivityLogs();
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', user?.id, filters],
@@ -94,12 +98,23 @@ export function useTransactions(filters?: TransactionFilters) {
           .eq('id', transaction.account_id);
       }
 
+      // Log activity
+      await logActivity.mutateAsync({
+        action_type: 'create',
+        entity_type: 'transaction',
+        entity_id: data.id,
+        entity_description: transaction.description,
+        new_data: JSON.parse(JSON.stringify(transaction)) as Json,
+        amount: transaction.amount,
+      });
+
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast.success('Transação adicionada!');
+      const typeLabel = variables.type === 'income' ? 'Receita' : 'Despesa';
+      toast.success(`${typeLabel} de ${formatCurrency(variables.amount)} adicionada com sucesso!`);
     },
     onError: () => {
       toast.error('Erro ao adicionar transação');
@@ -108,6 +123,13 @@ export function useTransactions(filters?: TransactionFilters) {
 
   const updateTransaction = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Transaction> & { id: string }) => {
+      // Get original data for logging
+      const { data: original } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       const { data, error } = await supabase
         .from('transactions')
         .update(updates)
@@ -116,12 +138,26 @@ export function useTransactions(filters?: TransactionFilters) {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (original) {
+        await logActivity.mutateAsync({
+          action_type: 'update',
+          entity_type: 'transaction',
+          entity_id: id,
+          entity_description: data.description || original.description,
+          original_data: JSON.parse(JSON.stringify(original)) as Json,
+          new_data: JSON.parse(JSON.stringify(updates)) as Json,
+          amount: Number(data.amount),
+        });
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast.success('Transação atualizada!');
+      toast.success('Transação atualizada com sucesso!');
     },
     onError: () => {
       toast.error('Erro ao atualizar transação');
@@ -130,6 +166,16 @@ export function useTransactions(filters?: TransactionFilters) {
 
   const deleteTransaction = useMutation({
     mutationFn: async (transaction: Transaction) => {
+      // Log activity before deletion (with is_deleted flag for tracking)
+      await logActivity.mutateAsync({
+        action_type: 'delete',
+        entity_type: 'transaction',
+        entity_id: transaction.id,
+        entity_description: transaction.description,
+        original_data: JSON.parse(JSON.stringify(transaction)) as Json,
+        amount: Number(transaction.amount),
+      });
+
       const { error } = await supabase
         .from('transactions')
         .delete()
@@ -152,10 +198,11 @@ export function useTransactions(filters?: TransactionFilters) {
           .eq('id', transaction.account_id);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast.success('Transação removida!');
+      const typeLabel = variables.type === 'income' ? 'Receita' : 'Despesa';
+      toast.success(`${typeLabel} de ${formatCurrency(Number(variables.amount))} removida com sucesso!`);
     },
     onError: () => {
       toast.error('Erro ao remover transação');

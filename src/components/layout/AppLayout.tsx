@@ -24,6 +24,7 @@ import {
   Bell,
   PiggyBank,
   TrendingUp,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
@@ -37,6 +38,7 @@ const navItems = [
   { href: '/orcamentos', label: 'Orçamentos', icon: PiggyBank },
   { href: '/metas', label: 'Metas', icon: Target },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
+  { href: '/historico', label: 'Histórico', icon: History },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

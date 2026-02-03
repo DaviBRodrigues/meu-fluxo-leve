@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CurrencyInput } from '@/components/shared/CurrencyInput';
 import { CalendarIcon, Loader2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAccounts } from '@/hooks/useAccounts';
@@ -117,11 +118,12 @@ export default function TransferForm({ isOpen, onClose, onSubmit, isLoading }: T
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor (R$)</Label>
-            <Input
+            <Label htmlFor="amount">Valor</Label>
+            <CurrencyInput
               id="amount"
               placeholder="0,00"
-              {...register('amount')}
+              value={watch('amount')}
+              onChange={(value) => setValue('amount', value)}
             />
             {errors.amount && (
               <p className="text-sm text-destructive">{errors.amount.message}</p>

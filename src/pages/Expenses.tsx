@@ -214,6 +214,7 @@ export default function Expenses() {
           transactions={transactions}
           isLoading={isLoading}
           onDelete={(transaction) => deleteTransaction.mutate(transaction)}
+          isDeleting={deleteTransaction.isPending}
         />
 
         {/* Form */}
