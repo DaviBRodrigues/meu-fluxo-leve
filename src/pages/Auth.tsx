@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Wallet, Loader2 } from 'lucide-react';
+import { Wallet, Loader2, KeyRound } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
@@ -17,6 +18,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [accessCode, setAccessCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +35,10 @@ export default function Auth() {
       passwordSchema.parse(password);
       if (isSignUp && fullName.length < 2) {
         toast.error('Nome deve ter pelo menos 2 caracteres');
+        return false;
+      }
+      if (isSignUp && accessCode.length < 3) {
+        toast.error('Código de acesso é obrigatório');
         return false;
       }
       return true;
@@ -71,6 +77,23 @@ export default function Auth() {
     if (!validateForm(true)) return;
     
     setIsLoading(true);
+
+    // Validate access code first
+    try {
+      const { data: isValid, error: codeError } = await supabase
+        .rpc('validate_access_code', { code_input: accessCode.toUpperCase() });
+
+      if (codeError || !isValid) {
+        toast.error('Código de acesso inválido ou expirado');
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      toast.error('Erro ao validar código de acesso');
+      setIsLoading(false);
+      return;
+    }
+
     const { error } = await signUp(email, password, fullName);
     setIsLoading(false);
 
@@ -139,6 +162,25 @@ export default function Auth() {
 
             <TabsContent value="register">
               <form onSubmit={handleSignUp} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="register-code">Código de Acesso</Label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="register-code"
+                      type="text"
+                      placeholder="Digite o código de acesso"
+                      value={accessCode}
+                      onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                      required
+                      className="pl-10 uppercase"
+                      maxLength={20}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Código fornecido pelo administrador para criar sua conta
+                  </p>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-name">Nome completo</Label>
                   <Input
