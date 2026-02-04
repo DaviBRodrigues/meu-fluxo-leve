@@ -47,9 +47,19 @@ import {
   Loader2,
   UserPlus,
   AlertTriangle,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface CreatedUserCredentials {
+  email: string;
+  password: string;
+  fullName: string;
+}
 
 export function UsersSection() {
   const { users, isLoading, updateProfile, toggleAdminRole } = useAdminUsers();
@@ -59,6 +69,10 @@ export function UsersSection() {
   const [deleteUser, setDeleteUser] = useState<UserProfile | null>(null);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<CreatedUserCredentials | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Edit form state
   const [isTestUser, setIsTestUser] = useState(false);
@@ -93,7 +107,16 @@ export function UsersSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
       toast.success('Usuário criado com sucesso!');
+      
+      // Save credentials to show
+      setCreatedCredentials({
+        email: newEmail,
+        password: newPassword,
+        fullName: newFullName,
+      });
+      
       setShowCreateDialog(false);
+      setShowCredentialsDialog(true);
       resetCreateForm();
     },
     onError: (error: Error) => {
@@ -157,24 +180,24 @@ export function UsersSection() {
     setEditingUser(null);
   };
 
-  const handleToggleAdmin = (user: UserProfile) => {
-    const isCurrentlyAdmin = user.roles?.includes('admin');
-    // Open confirmation dialog for admin changes
-    setDeleteUser(user);
-    setDeleteStep(1);
-  };
-
   const handleInitiateDelete = (user: UserProfile) => {
     setDeleteUser(user);
     setDeleteStep(1);
   };
 
-  const handleConfirmDelete = () => {
-    if (deleteStep === 1) {
-      setDeleteStep(2);
-    } else if (deleteUser) {
-      deleteUserMutation.mutate(deleteUser.user_id);
+  const handleConfirmFirstStep = () => {
+    setDeleteStep(2);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteUser) {
+      await deleteUserMutation.mutateAsync(deleteUser.user_id);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteUser(null);
+    setDeleteStep(1);
   };
 
   const handleCreateUser = () => {
@@ -187,6 +210,13 @@ export function UsersSection() {
       return;
     }
     createUser.mutate();
+  };
+
+  const handleCopy = (value: string, field: string) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    toast.success('Copiado!');
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   if (isLoading) {
@@ -487,6 +517,99 @@ export function UsersSection() {
         </DialogContent>
       </Dialog>
 
+      {/* Credentials Dialog - Shows after user creation */}
+      <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <Check className="h-5 w-5" />
+              Usuário Criado com Sucesso!
+            </DialogTitle>
+            <DialogDescription>
+              Guarde as credenciais abaixo. A senha não poderá ser visualizada novamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted rounded-lg space-y-4">
+                {createdCredentials.fullName && (
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Nome</Label>
+                    <p className="font-medium">{createdCredentials.fullName}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Email</Label>
+                    <p className="font-mono text-sm">{createdCredentials.email}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCopy(createdCredentials.email, 'email')}
+                  >
+                    {copiedField === 'email' ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Senha</Label>
+                    <p className="font-mono text-sm">
+                      {showPassword ? createdCredentials.password : '••••••••'}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopy(createdCredentials.password, 'password')}
+                    >
+                      {copiedField === 'password' ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-amber-600 bg-amber-500/10 p-3 rounded-lg">
+                ⚠️ Anote estas credenciais! A senha não será exibida novamente após fechar esta janela.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => {
+              setShowCredentialsDialog(false);
+              setCreatedCredentials(null);
+              setShowPassword(false);
+            }}>
+              Entendi, Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
         <DialogContent>
@@ -560,7 +683,7 @@ export function UsersSection() {
       </Dialog>
 
       {/* Delete Confirmation - Step 1 */}
-      <AlertDialog open={!!deleteUser && deleteStep === 1} onOpenChange={() => { setDeleteUser(null); setDeleteStep(1); }}>
+      <AlertDialog open={!!deleteUser && deleteStep === 1} onOpenChange={handleCancelDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -580,8 +703,8 @@ export function UsersSection() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel onClick={handleCancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmFirstStep} className="bg-destructive hover:bg-destructive/90">
               Continuar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -589,26 +712,28 @@ export function UsersSection() {
       </AlertDialog>
 
       {/* Delete Confirmation - Step 2 */}
-      <AlertDialog open={!!deleteUser && deleteStep === 2} onOpenChange={() => { setDeleteUser(null); setDeleteStep(1); }}>
+      <AlertDialog open={!!deleteUser && deleteStep === 2} onOpenChange={handleCancelDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
               Confirmar Exclusão Permanente
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              <strong className="text-destructive">ATENÇÃO!</strong> Você está prestes a excluir PERMANENTEMENTE:
-              <br /><br />
-              <strong>{deleteUser?.full_name || 'Sem nome'}</strong>
-              <br />
-              <span className="text-xs">{deleteUser?.user_id}</span>
-              <br /><br />
-              O usuário será deslogado imediatamente e perderá todo acesso ao sistema.
-              <strong className="block mt-2">Todos os dados serão perdidos para sempre.</strong>
+            <AlertDialogDescription asChild>
+              <div>
+                <strong className="text-destructive">ATENÇÃO!</strong> Você está prestes a excluir PERMANENTEMENTE:
+                <br /><br />
+                <strong>{deleteUser?.full_name || 'Sem nome'}</strong>
+                <br />
+                <span className="text-xs">{deleteUser?.user_id}</span>
+                <br /><br />
+                O usuário será deslogado imediatamente e perderá todo acesso ao sistema.
+                <strong className="block mt-2">Todos os dados serão perdidos para sempre.</strong>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelDelete}>Cancelar</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmDelete} 
               className="bg-destructive hover:bg-destructive/90"
