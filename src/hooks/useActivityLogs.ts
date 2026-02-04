@@ -104,11 +104,53 @@ export function useActivityLogs() {
     },
   });
 
+  // Delete specific log entry
+  const deleteLog = useMutation({
+    mutationFn: async (logId: string) => {
+      const { error } = await supabase
+        .from('activity_logs')
+        .delete()
+        .eq('id', logId)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
+      toast.success('Registro excluído!');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir registro');
+    },
+  });
+
+  // Delete multiple logs
+  const deleteLogs = useMutation({
+    mutationFn: async (logIds: string[]) => {
+      const { error } = await supabase
+        .from('activity_logs')
+        .delete()
+        .in('id', logIds)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, logIds) => {
+      queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
+      toast.success(`${logIds.length} registro(s) excluído(s)!`);
+    },
+    onError: () => {
+      toast.error('Erro ao excluir registros');
+    },
+  });
+
   return {
     logs,
     isLoading,
     logActivity,
     clearLogs,
     markAsDeleted,
+    deleteLog,
+    deleteLogs,
   };
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -25,11 +26,12 @@ import {
   PiggyBank,
   TrendingUp,
   History,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 
-const navItems = [
+const baseNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/receitas', label: 'Receitas', icon: ArrowUpCircle },
   { href: '/despesas', label: 'Despesas', icon: ArrowDownCircle },
@@ -43,10 +45,16 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRoles();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const { dueReminders } = useRecurringReminders();
+
+  // Add admin link if user is admin
+  const navItems = isAdmin
+    ? [...baseNavItems, { href: '/admin', label: 'Admin', icon: Shield }]
+    : baseNavItems;
 
   const handleSignOut = async () => {
     await signOut();
