@@ -28,9 +28,10 @@ export function useTransactions(filters?: TransactionFilters) {
         .select(`
           *,
           category:categories(*),
-          account:accounts(*)
+          account:accounts!inner(*)
         `)
         .eq('user_id', user!.id)
+        .eq('account.is_active', true)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
 
