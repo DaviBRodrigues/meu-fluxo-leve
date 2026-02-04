@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+        }
+        Relationships: []
+      }
       accounts: {
         Row: {
           balance: number
@@ -576,6 +612,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      validate_access_code: { Args: { code_input: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
