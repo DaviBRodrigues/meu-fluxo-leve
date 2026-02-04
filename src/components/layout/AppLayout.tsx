@@ -64,9 +64,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             to={item.href}
             onClick={() => setIsOpen(false)}
             className={cn(
-              'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
+              'flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative',
               isActive
-                ? 'bg-primary text-primary-foreground'
+                ? 'text-primary bg-primary/5 font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-primary before:rounded-r-full'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
             )}
           >
