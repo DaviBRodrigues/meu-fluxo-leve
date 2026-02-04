@@ -4,12 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Transaction } from '@/types/database';
-import { formatCurrency, formatDate } from '@/lib/format';
-import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt } from 'lucide-react';
+import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format';
+import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionFilters, { FilterPeriod } from './TransactionFilters';
 import EmptyState from '@/components/shared/EmptyState';
-import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format } from 'date-fns';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -18,6 +18,19 @@ interface TransactionListProps {
   onEdit?: (transaction: Transaction) => void;
   showFilters?: boolean;
   isDeleting?: boolean;
+}
+
+// Group transactions by date
+function groupTransactionsByDate(transactions: Transaction[]): Record<string, Transaction[]> {
+  return transactions.reduce((acc, transaction) => {
+    // Use the date string for grouping (YYYY-MM-DD format from DB)
+    const dateKey = format(new Date(transaction.date), 'yyyy-MM-dd');
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(transaction);
+    return acc;
+  }, {} as Record<string, Transaction[]>);
 }
 
 export default function TransactionList({
@@ -71,6 +84,16 @@ export default function TransactionList({
 
     return filtered;
   }, [transactions, search, period]);
+
+  // Group filtered transactions by date
+  const groupedTransactions = useMemo(() => {
+    return groupTransactionsByDate(filteredTransactions);
+  }, [filteredTransactions]);
+
+  // Sort date keys in descending order
+  const sortedDateKeys = useMemo(() => {
+    return Object.keys(groupedTransactions).sort((a, b) => b.localeCompare(a));
+  }, [groupedTransactions]);
 
   const handleConfirmDelete = () => {
     if (transactionToDelete && onDelete) {
@@ -135,85 +158,94 @@ export default function TransactionList({
               </div>
             )
           ) : (
-            <div className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {filteredTransactions.map((transaction, index) => (
-                  <motion.div
-                    key={transaction.id}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    transition={{ delay: index * 0.05, duration: 0.2 }}
-                    layout
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
-                  >
-                    <div
-                      className={cn(
-                        'w-12 h-12 rounded-lg flex items-center justify-center shrink-0',
-                        transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
-                      )}
-                    >
-                      {transaction.type === 'income' ? (
-                        <ArrowUpCircle className="w-6 h-6 text-income" />
-                      ) : (
-                        <ArrowDownCircle className="w-6 h-6 text-expense" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{transaction.description}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span
-                          className="inline-block w-2 h-2 rounded-full"
-                          style={{ backgroundColor: transaction.category?.color }}
-                        />
-                        <span>{transaction.category?.name}</span>
-                        <span>•</span>
-                        <span>{formatDate(transaction.date)}</span>
-                        {transaction.recurrence === 'fixed' && (
-                          <>
-                            <span>•</span>
-                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Fixa</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <p
-                      className={cn(
-                        'font-bold text-lg whitespace-nowrap',
-                        transaction.type === 'income' ? 'text-income' : 'text-expense'
-                      )}
-                    >
-                      {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Number(transaction.amount))}
-                    </p>
-
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {onEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onEdit(transaction)}
+            <div className="space-y-6">
+              {sortedDateKeys.map((dateKey) => (
+                <div key={dateKey}>
+                  {/* Date Group Header */}
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+                    {formatRelativeDate(dateKey)}
+                  </h3>
+                  
+                  {/* Transactions for this date */}
+                  <div className="space-y-2">
+                    <AnimatePresence mode="popLayout">
+                      {groupedTransactions[dateKey].map((transaction, index) => (
+                        <motion.div
+                          key={transaction.id}
+                          variants={itemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          transition={{ delay: index * 0.03, duration: 0.2 }}
+                          layout
+                          className="flex items-center gap-3 p-3 rounded-xl bg-card shadow-sm hover:shadow-md transition-all group"
                         >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setTransactionToDelete(transaction)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                          <div
+                            className={cn(
+                              'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
+                              transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
+                            )}
+                          >
+                            {transaction.type === 'income' ? (
+                              <ArrowUpCircle className="w-6 h-6 text-income" />
+                            ) : (
+                              <ArrowDownCircle className="w-6 h-6 text-expense" />
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium truncate">{transaction.description}</p>
+                              {transaction.recurrence === 'fixed' && (
+                                <RefreshCw className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span
+                                className="inline-block w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: transaction.category?.color }}
+                              />
+                              <span className="truncate">{transaction.category?.name}</span>
+                            </div>
+                          </div>
+
+                          <p
+                            className={cn(
+                              'font-bold text-lg whitespace-nowrap',
+                              transaction.type === 'income' ? 'text-income' : 'text-expense'
+                            )}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Number(transaction.amount))}
+                          </p>
+
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onEdit && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => onEdit(transaction)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setTransactionToDelete(transaction)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

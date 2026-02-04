@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import AnimatedStatCard from '@/components/dashboard/AnimatedStatCard';
+import { BalanceHighlight } from '@/components/dashboard/BalanceHighlight';
+import { FloatingActionButton } from '@/components/dashboard/FloatingActionButton';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import ExpensesByCategory from '@/components/dashboard/ExpensesByCategory';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
@@ -113,7 +115,7 @@ export default function Dashboard() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-6"
+        className="space-y-8 lg:space-y-10"
       >
         {/* Header with Month Navigation */}
         <motion.div variants={itemVariants} className="flex items-center justify-between">
@@ -133,8 +135,13 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Quick Actions - Prominent Section */}
+        {/* Balance Highlight - Full Width */}
         <motion.div variants={itemVariants}>
+          <BalanceHighlight balance={totalBalance} isLoading={isLoadingAccounts} />
+        </motion.div>
+
+        {/* Quick Actions - Desktop only */}
+        <motion.div variants={itemVariants} className="hidden lg:block">
           <QuickActions
             onNewIncome={() => handleOpenForm('income')}
             onNewExpense={() => handleOpenForm('expense')}
@@ -166,14 +173,8 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid with Animated Values */}
-        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <AnimatedStatCard
-            title="Saldo Total"
-            value={totalBalance}
-            icon={Wallet}
-            variant="balance"
-          />
+        {/* Stats Grid - 3 columns now (balance is separate) */}
+        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-3">
           <AnimatedStatCard
             title="Receitas do mês"
             value={totalIncome}
@@ -285,6 +286,13 @@ export default function Dashboard() {
           onClose={() => setIsTransferOpen(false)}
           onSubmit={(data) => createTransfer.mutate(data)}
           isLoading={createTransfer.isPending}
+        />
+
+        {/* Floating Action Button - Mobile only */}
+        <FloatingActionButton
+          onNewIncome={() => handleOpenForm('income')}
+          onNewExpense={() => handleOpenForm('expense')}
+          onTransfer={() => setIsTransferOpen(true)}
         />
       </motion.div>
     </AppLayout>

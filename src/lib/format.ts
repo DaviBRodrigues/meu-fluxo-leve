@@ -1,3 +1,6 @@
+import { isToday, isYesterday, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -11,6 +14,20 @@ export function formatDate(date: string | Date): string {
     month: '2-digit',
     year: 'numeric',
   }).format(new Date(date));
+}
+
+export function formatRelativeDate(date: string | Date): string {
+  const dateObj = new Date(date);
+  
+  if (isToday(dateObj)) {
+    return 'Hoje';
+  }
+  
+  if (isYesterday(dateObj)) {
+    return 'Ontem';
+  }
+  
+  return format(dateObj, "d 'de' MMMM", { locale: ptBR });
 }
 
 export function formatShortDate(date: string | Date): string {
