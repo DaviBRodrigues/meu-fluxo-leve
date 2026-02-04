@@ -3,11 +3,12 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AppLayout from '@/components/layout/AppLayout';
-import { useActivityLogs } from '@/hooks/useActivityLogs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useActivityLogs, ActivityLog } from '@/hooks/useActivityLogs';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -40,11 +41,14 @@ import {
 } from 'lucide-react';
 
 export default function History() {
-  const { logs, isLoading, clearLogs } = useActivityLogs();
+  const { logs, isLoading, clearLogs, deleteLog, deleteLogs } = useActivityLogs();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterAction, setFilterAction] = useState<string>('all');
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -53,7 +57,7 @@ export default function History() {
       case 'update':
         return <Pencil className="h-4 w-4 text-amber-500" />;
       case 'delete':
-        return <Trash className="h-4 w-4 text-rose-500" />;
+        return <Trash className="h-4 w-4 text-destructive" />;
       default:
         return <HistoryIcon className="h-4 w-4" />;
     }
@@ -106,6 +110,37 @@ export default function History() {
 
   const entityTypes = [...new Set(logs.map((log) => log.entity_type))];
 
+  const handleSelectLog = (logId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLogs([...selectedLogs, logId]);
+    } else {
+      setSelectedLogs(selectedLogs.filter((id) => id !== logId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedLogs(filteredLogs.map((log) => log.id));
+    } else {
+      setSelectedLogs([]);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedLogs.length > 0) {
+      await deleteLogs.mutateAsync(selectedLogs);
+      setSelectedLogs([]);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleDeleteSingle = async () => {
+    if (deletingLogId) {
+      await deleteLog.mutateAsync(deletingLogId);
+      setDeletingLogId(null);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -149,16 +184,28 @@ export default function History() {
               Registro completo de todas as movimentações do sistema
             </p>
           </div>
-          {logs.length > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setIsClearDialogOpen(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Limpar Histórico
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {selectedLogs.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir ({selectedLogs.length})
+              </Button>
+            )}
+            {logs.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsClearDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Limpar Tudo
+              </Button>
+            )}
+          </div>
         </div>
 
         {logs.length === 0 ? (
@@ -218,12 +265,22 @@ export default function History() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]">
+                        <Checkbox
+                          checked={
+                            filteredLogs.length > 0 &&
+                            selectedLogs.length === filteredLogs.length
+                          }
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead className="w-[180px]">Data/Hora</TableHead>
                       <TableHead className="w-[100px]">Ação</TableHead>
                       <TableHead className="w-[120px]">Tipo</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead className="text-right w-[120px]">Valor</TableHead>
                       <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead className="w-[60px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -239,6 +296,14 @@ export default function History() {
                           variants={itemVariants}
                           className="border-b transition-colors hover:bg-muted/50"
                         >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedLogs.includes(log.id)}
+                              onCheckedChange={(checked) =>
+                                handleSelectLog(log.id, checked as boolean)
+                              }
+                            />
+                          </TableCell>
                           <TableCell className="font-mono text-sm">
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -270,11 +335,21 @@ export default function History() {
                           </TableCell>
                           <TableCell>
                             {log.is_deleted && (
-                              <Badge variant="outline" className="text-rose-500 border-rose-500/50">
+                              <Badge variant="outline" className="text-destructive border-destructive/50">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Excluído
                               </Badge>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeletingLogId(log.id)}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                         </motion.tr>
                       ))}
@@ -304,7 +379,7 @@ export default function History() {
                     {logs.filter((l) => l.action_type === 'update').length} edições
                   </span>
                   <span className="flex items-center gap-1">
-                    <Trash className="h-3 w-3 text-rose-500" />
+                    <Trash className="h-3 w-3 text-destructive" />
                     {logs.filter((l) => l.action_type === 'delete').length} exclusões
                   </span>
                 </div>
@@ -313,7 +388,7 @@ export default function History() {
           </Card>
         )}
 
-        {/* Clear Dialog */}
+        {/* Clear All Dialog */}
         <DeleteConfirmDialog
           isOpen={isClearDialogOpen}
           onClose={() => setIsClearDialogOpen(false)}
@@ -322,6 +397,28 @@ export default function History() {
           description="Esta ação removerá permanentemente todos os registros de atividade. Esta ação não pode ser desfeita."
           affectsBalance={false}
           isLoading={clearLogs.isPending}
+        />
+
+        {/* Delete Selected Dialog */}
+        <DeleteConfirmDialog
+          isOpen={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onConfirm={handleDeleteSelected}
+          title={`Excluir ${selectedLogs.length} registro(s)`}
+          description="Esta ação removerá permanentemente os registros selecionados. Esta ação não pode ser desfeita."
+          affectsBalance={false}
+          isLoading={deleteLogs.isPending}
+        />
+
+        {/* Delete Single Log Dialog */}
+        <DeleteConfirmDialog
+          isOpen={!!deletingLogId}
+          onClose={() => setDeletingLogId(null)}
+          onConfirm={handleDeleteSingle}
+          title="Excluir registro"
+          description="Esta ação removerá permanentemente este registro do histórico."
+          affectsBalance={false}
+          isLoading={deleteLog.isPending}
         />
       </motion.div>
     </AppLayout>
