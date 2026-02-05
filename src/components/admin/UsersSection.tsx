@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,7 +51,6 @@ import {
   Check,
   Eye,
   EyeOff,
-  Key,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -78,6 +77,7 @@ export function UsersSection() {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [deleteUser, setDeleteUser] = useState<UserProfile | null>(null);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const isDeleteStepTransitioningRef = useRef(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<CreatedUserCredentials | null>(null);
@@ -222,9 +222,13 @@ export function UsersSection() {
   const handleInitiateDelete = (user: UserProfile) => {
     setDeleteUser(user);
     setDeleteStep(1);
+    isDeleteStepTransitioningRef.current = false;
   };
 
   const handleConfirmFirstStep = () => {
+    // Radix closes the dialog immediately; we must prevent the onOpenChange(close)
+    // from treating this as a cancel.
+    isDeleteStepTransitioningRef.current = true;
     setDeleteStep(2);
   };
 
@@ -237,6 +241,7 @@ export function UsersSection() {
   const handleCancelDelete = () => {
     setDeleteUser(null);
     setDeleteStep(1);
+    isDeleteStepTransitioningRef.current = false;
   };
 
   const handleCreateUser = () => {
@@ -405,18 +410,18 @@ export function UsersSection() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         {/* Show credentials button - only if credentials exist */}
-                        {storedCredentials.find(c => c.user_id === user.user_id) && (
+                        {storedCredentials.find((c) => c.user_id === user.user_id) && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const creds = storedCredentials.find(c => c.user_id === user.user_id);
+                              const creds = storedCredentials.find((c) => c.user_id === user.user_id);
                               if (creds) setViewingCredentials(creds);
                             }}
                             title="Ver credenciais"
                             className="text-green-600 hover:text-green-600"
                           >
-                            <Key className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                         )}
                         <Button
@@ -737,7 +742,14 @@ export function UsersSection() {
       </Dialog>
 
       {/* Delete Confirmation - Step 1 */}
-      <AlertDialog open={!!deleteUser && deleteStep === 1} onOpenChange={handleCancelDelete}>
+      <AlertDialog
+        open={!!deleteUser && deleteStep === 1}
+        onOpenChange={(open) => {
+          // Only cancel when the user closes THIS step.
+          // When moving to step 2, step 1 closes because deleteStep changes.
+          if (!open && !isDeleteStepTransitioningRef.current) handleCancelDelete();
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -766,7 +778,12 @@ export function UsersSection() {
       </AlertDialog>
 
       {/* Delete Confirmation - Step 2 */}
-      <AlertDialog open={!!deleteUser && deleteStep === 2} onOpenChange={handleCancelDelete}>
+      <AlertDialog
+        open={!!deleteUser && deleteStep === 2}
+        onOpenChange={(open) => {
+          if (!open) handleCancelDelete();
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
@@ -811,7 +828,7 @@ export function UsersSection() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5 text-green-600" />
+              <Eye className="h-5 w-5 text-green-600" />
               Credenciais do Usuário
             </DialogTitle>
             <DialogDescription>
