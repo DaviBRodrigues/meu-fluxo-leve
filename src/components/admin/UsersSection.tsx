@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,14 +51,24 @@ import {
   Check,
   Eye,
   EyeOff,
+  Key,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface CreatedUserCredentials {
   email: string;
   password: string;
   fullName: string;
+}
+
+interface StoredCredentials {
+  id: string;
+  user_id: string;
+  email: string;
+  password: string;
+  full_name: string | null;
+  created_at: string;
 }
 
 export function UsersSection() {
@@ -73,6 +83,22 @@ export function UsersSection() {
   const [createdCredentials, setCreatedCredentials] = useState<CreatedUserCredentials | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [viewingCredentials, setViewingCredentials] = useState<StoredCredentials | null>(null);
+  const [showStoredPasswordId, setShowStoredPasswordId] = useState<string | null>(null);
+
+  // Fetch stored credentials for test users
+  const { data: storedCredentials = [] } = useQuery({
+    queryKey: ['test_user_credentials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('test_user_credentials')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as StoredCredentials[];
+    },
+  });
 
   // Edit form state
   const [isTestUser, setIsTestUser] = useState(false);
@@ -104,8 +130,21 @@ export function UsersSection() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Save credentials to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('test_user_credentials').insert({
+          user_id: data.user.id,
+          email: newEmail,
+          password: newPassword,
+          full_name: newFullName || null,
+          created_by: user.id,
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
+      queryClient.invalidateQueries({ queryKey: ['test_user_credentials'] });
       toast.success('Usuário criado com sucesso!');
       
       // Save credentials to show
@@ -365,6 +404,21 @@ export function UsersSection() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Show credentials button - only if credentials exist */}
+                        {storedCredentials.find(c => c.user_id === user.user_id) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const creds = storedCredentials.find(c => c.user_id === user.user_id);
+                              if (creds) setViewingCredentials(creds);
+                            }}
+                            title="Ver credenciais"
+                            className="text-green-600 hover:text-green-600"
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -748,6 +802,108 @@ export function UsersSection() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Stored Credentials Dialog */}
+      <Dialog open={!!viewingCredentials} onOpenChange={() => {
+        setViewingCredentials(null);
+        setShowStoredPasswordId(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-green-600" />
+              Credenciais do Usuário
+            </DialogTitle>
+            <DialogDescription>
+              Credenciais salvas para este usuário de teste
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted rounded-lg space-y-4">
+                {viewingCredentials.full_name && (
+                  <div>
+                    <Label className="text-muted-foreground text-xs">Nome</Label>
+                    <p className="font-medium">{viewingCredentials.full_name}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label className="text-muted-foreground text-xs">Email</Label>
+                    <p className="font-mono text-sm break-all">{viewingCredentials.email}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCopy(viewingCredentials.email, 'stored-email')}
+                  >
+                    {copiedField === 'stored-email' ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label className="text-muted-foreground text-xs">Senha</Label>
+                    <p className="font-mono text-sm">
+                      {showStoredPasswordId === viewingCredentials.id 
+                        ? viewingCredentials.password 
+                        : '••••••••'}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowStoredPasswordId(
+                        showStoredPasswordId === viewingCredentials.id ? null : viewingCredentials.id
+                      )}
+                    >
+                      {showStoredPasswordId === viewingCredentials.id ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopy(viewingCredentials.password, 'stored-password')}
+                    >
+                      {copiedField === 'stored-password' ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <Label className="text-muted-foreground text-xs">Criado em</Label>
+                  <p className="text-sm">
+                    {format(new Date(viewingCredentials.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => {
+              setViewingCredentials(null);
+              setShowStoredPasswordId(null);
+            }}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
