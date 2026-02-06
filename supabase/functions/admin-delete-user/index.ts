@@ -73,6 +73,25 @@ Deno.serve(async (req) => {
 
     console.log(`Admin ${user.id} deleting user: ${userId}`)
 
+    // First, revoke all active sessions to force immediate logout
+    try {
+      await supabaseAdmin.auth.admin.signOut(userId, 'global')
+      console.log(`All sessions revoked for user: ${userId}`)
+    } catch (signOutError) {
+      console.warn('Could not revoke sessions (user may have none):', signOutError)
+      // Continue with deletion even if sign-out fails
+    }
+
+    // Clean up test_user_credentials
+    const { error: credError } = await supabaseAdmin
+      .from('test_user_credentials')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (credError) {
+      console.warn('Could not clean test_user_credentials:', credError)
+    }
+
     // Delete user from auth (this will cascade to profiles due to ON DELETE CASCADE)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
