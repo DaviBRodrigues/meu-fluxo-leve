@@ -45,6 +45,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Periodic session validation - detects deleted/revoked users
+  useEffect(() => {
+    if (!session) return;
+
+    const validateSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user) {
+          console.warn('Session invalidated - forcing logout');
+          await supabase.auth.signOut({ scope: 'local' });
+          setUser(null);
+          setSession(null);
+        }
+      } catch {
+        // Network error - skip this check
+      }
+    };
+
+    // Check every 30 seconds
+    const interval = setInterval(validateSession, 30_000);
+
+    return () => clearInterval(interval);
+  }, [session]);
+
   const createProfileIfNotExists = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
