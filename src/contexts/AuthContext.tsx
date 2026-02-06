@@ -53,18 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await supabase.auth.getUser();
         if (error || !data.user) {
-          console.warn('Session invalidated - forcing logout');
+          console.warn('Session invalidated - forcing logout and reload');
+          // Clear local storage to remove any cached tokens
+          localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_PROJECT_ID + '-auth-token');
           await supabase.auth.signOut({ scope: 'local' });
-          setUser(null);
-          setSession(null);
+          // Force full page reload to clear all state
+          window.location.href = '/auth';
+          return;
         }
       } catch {
         // Network error - skip this check
       }
     };
 
-    // Check every 30 seconds
-    const interval = setInterval(validateSession, 30_000);
+    // Check every 5 seconds for faster detection
+    const interval = setInterval(validateSession, 5_000);
 
     return () => clearInterval(interval);
   }, [session]);
