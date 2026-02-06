@@ -85,6 +85,9 @@ export function UsersSection() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [viewingCredentials, setViewingCredentials] = useState<StoredCredentials | null>(null);
   const [showStoredPasswordId, setShowStoredPasswordId] = useState<string | null>(null);
+  
+  // Admin role confirmation state
+  const [adminRoleConfirm, setAdminRoleConfirm] = useState<{ user: UserProfile; makeAdmin: boolean } | null>(null);
 
   // Fetch stored credentials for test users
   const { data: storedCredentials = [] } = useQuery({
@@ -176,6 +179,7 @@ export function UsersSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
+      queryClient.invalidateQueries({ queryKey: ['test_user_credentials'] });
       toast.success('Usuário excluído permanentemente!');
       setDeleteUser(null);
       setDeleteStep(1);
@@ -429,10 +433,7 @@ export function UsersSection() {
                           size="sm"
                           onClick={() => {
                             const isCurrentlyAdmin = user.roles?.includes('admin');
-                            toggleAdminRole.mutate({
-                              userId: user.user_id,
-                              makeAdmin: !isCurrentlyAdmin,
-                            });
+                            setAdminRoleConfirm({ user, makeAdmin: !isCurrentlyAdmin });
                           }}
                           title={user.roles?.includes('admin') ? 'Remover admin' : 'Tornar admin'}
                         >
@@ -921,6 +922,56 @@ export function UsersSection() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Admin Role Confirmation Dialog */}
+      <AlertDialog
+        open={!!adminRoleConfirm}
+        onOpenChange={(open) => {
+          if (!open) setAdminRoleConfirm(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-amber-500" />
+              {adminRoleConfirm?.makeAdmin ? 'Tornar Administrador' : 'Remover Administrador'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {adminRoleConfirm?.makeAdmin ? (
+                <>
+                  Você está prestes a conceder permissões de <strong>administrador</strong> ao usuário{' '}
+                  <strong>{adminRoleConfirm?.user.full_name || adminRoleConfirm?.user.user_id}</strong>.
+                  <br /><br />
+                  Administradores podem gerenciar todos os usuários, alterar permissões e acessar o painel administrativo.
+                </>
+              ) : (
+                <>
+                  Você está prestes a <strong>remover</strong> as permissões de administrador do usuário{' '}
+                  <strong>{adminRoleConfirm?.user.full_name || adminRoleConfirm?.user.user_id}</strong>.
+                  <br /><br />
+                  O usuário perderá acesso ao painel administrativo e não poderá mais gerenciar outros usuários.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setAdminRoleConfirm(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (adminRoleConfirm) {
+                  toggleAdminRole.mutate({
+                    userId: adminRoleConfirm.user.user_id,
+                    makeAdmin: adminRoleConfirm.makeAdmin,
+                  });
+                  setAdminRoleConfirm(null);
+                }
+              }}
+              className={adminRoleConfirm?.makeAdmin ? 'bg-amber-600 hover:bg-amber-700' : 'bg-destructive hover:bg-destructive/90'}
+            >
+              {adminRoleConfirm?.makeAdmin ? 'Sim, Tornar Admin' : 'Sim, Remover Admin'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
