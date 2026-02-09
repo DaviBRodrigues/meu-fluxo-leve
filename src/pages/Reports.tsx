@@ -23,18 +23,18 @@ export default function Reports() {
     return null;
   }
 
-  // Filter transactions for selected year
+  // Filter transactions for selected year (parse date string to avoid timezone shift)
   const yearTransactions = transactions.filter((t) => {
-    const date = new Date(t.date);
-    return date.getFullYear() === selectedYear;
+    const [y] = t.date.split('-').map(Number);
+    return y === selectedYear;
   });
 
   // Monthly data for charts
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
     const monthTransactions = yearTransactions.filter((t) => {
-      const date = new Date(t.date);
-      return date.getMonth() + 1 === month;
+      const [, m] = t.date.split('-').map(Number);
+      return m === month;
     });
 
     const income = monthTransactions
@@ -102,7 +102,7 @@ export default function Reports() {
     return null;
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+  const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
 
   return (
     <AppLayout>

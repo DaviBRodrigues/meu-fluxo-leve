@@ -81,6 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!data) {
       await supabase.from('profiles').insert({ user_id: userId });
+    } else {
+      // Update last_seen_at
+      await supabase
+        .from('profiles')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('user_id', userId);
     }
   };
 

@@ -36,11 +36,13 @@ export function useTransactions(filters?: TransactionFilters) {
         .order('created_at', { ascending: false });
 
       if (filters?.month && filters?.year) {
-        const startDate = new Date(filters.year, filters.month - 1, 1);
-        const endDate = new Date(filters.year, filters.month, 0);
+        // Use YYYY-MM-DD strings directly to avoid timezone issues
+        const startDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`;
+        const lastDay = new Date(filters.year, filters.month, 0).getDate();
+        const endDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
         query = query
-          .gte('date', startDate.toISOString().split('T')[0])
-          .lte('date', endDate.toISOString().split('T')[0]);
+          .gte('date', startDate)
+          .lte('date', endDate);
       }
 
       if (filters?.type) {
