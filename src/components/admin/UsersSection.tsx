@@ -51,6 +51,9 @@ import {
   Check,
   Eye,
   EyeOff,
+  UserX,
+  UserCheck,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -71,7 +74,7 @@ interface StoredCredentials {
 }
 
 export function UsersSection() {
-  const { users, isLoading, updateProfile, toggleAdminRole } = useAdminUsers();
+  const { users, isLoading, updateProfile, toggleAdminRole, toggleUserActive } = useAdminUsers();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
@@ -201,6 +204,7 @@ export function UsersSection() {
   const filteredUsers = users.filter(
     (u) =>
       u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
       u.user_id.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -357,9 +361,10 @@ export function UsersSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead>Expira em</TableHead>
+                  <TableHead>Último Acesso</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -371,9 +376,15 @@ export function UsersSection() {
                         <span className="font-medium">
                           {user.full_name || 'Sem nome'}
                         </span>
-                        <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {user.user_id}
+                        <span className="text-xs text-muted-foreground">
+                          Criado em {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                         </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Mail className="h-3 w-3 text-muted-foreground" />
+                        <span className="truncate max-w-[200px]">{user.email || '—'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -396,23 +407,30 @@ export function UsersSection() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {user.test_expires_at ? (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Clock className="h-3 w-3 text-amber-500" />
-                          {format(new Date(user.test_expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      {user.last_sign_in_at ? (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(user.last_sign_in_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
+                        <span className="text-muted-foreground text-sm">Nunca</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.is_active !== false ? (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Ativo
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                          <UserX className="h-3 w-3 mr-1" />
+                          Inativo
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         {/* Show credentials button - only if credentials exist */}
                         {storedCredentials.find((c) => c.user_id === user.user_id) && (
                           <Button
@@ -444,6 +462,23 @@ export function UsersSection() {
                                 : 'text-muted-foreground'
                             }`}
                           />
+                        </Button>
+                        {/* Toggle active/inactive */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleUserActive.mutate({ 
+                            userId: user.user_id, 
+                            isActive: user.is_active === false 
+                          })}
+                          title={user.is_active !== false ? 'Desativar usuário' : 'Reativar usuário'}
+                          disabled={toggleUserActive.isPending}
+                        >
+                          {user.is_active !== false ? (
+                            <UserX className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <UserCheck className="h-4 w-4 text-emerald-500" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
@@ -498,10 +533,10 @@ export function UsersSection() {
             <div className="space-y-2">
               <Label>Email</Label>
               <Input
-                type="email"
+                type="text"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="email@exemplo.com"
+                placeholder="email@qualquerprovedor.com"
               />
             </div>
             <div className="space-y-2">

@@ -16,11 +16,12 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
   const { dueReminders } = useRecurringReminders();
   const { totalBalance } = useAccounts();
 
-  // Calculate days elapsed and remaining in month
-  const today = new Date();
+  // Calculate days elapsed and remaining in month (using local date)
+  const now = new Date();
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const daysInMonth = new Date(year, month, 0).getDate();
-  const currentDay = today.getMonth() + 1 === month && today.getFullYear() === year
-    ? today.getDate()
+  const currentDay = (now.getMonth() + 1 === month && now.getFullYear() === year)
+    ? todayLocal.getDate()
     : daysInMonth;
   const daysRemaining = daysInMonth - currentDay;
 

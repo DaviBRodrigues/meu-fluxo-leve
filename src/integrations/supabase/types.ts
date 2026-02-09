@@ -345,7 +345,9 @@ export type Database = {
           created_by: string | null
           full_name: string | null
           id: string
+          is_active: boolean
           is_test_user: boolean
+          last_seen_at: string | null
           test_expiration_days: number | null
           test_expires_at: string | null
           updated_at: string
@@ -356,7 +358,9 @@ export type Database = {
           created_by?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           is_test_user?: boolean
+          last_seen_at?: string | null
           test_expiration_days?: number | null
           test_expires_at?: string | null
           updated_at?: string
@@ -367,7 +371,9 @@ export type Database = {
           created_by?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           is_test_user?: boolean
+          last_seen_at?: string | null
           test_expiration_days?: number | null
           test_expires_at?: string | null
           updated_at?: string

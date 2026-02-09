@@ -9,12 +9,15 @@ export interface UserProfile {
   user_id: string;
   full_name: string | null;
   is_test_user: boolean;
+  is_active: boolean;
   test_expiration_days: number | null;
   test_expires_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  last_seen_at: string | null;
   email?: string;
+  last_sign_in_at?: string | null;
   roles?: AppRole[];
 }
 
@@ -23,9 +26,21 @@ export function useAdminUsers() {
   const { isAdmin } = useUserRoles();
   const queryClient = useQueryClient();
 
+  // Fetch auth user data (emails, last sign in)
+  const { data: authUsersMap = {} } = useQuery({
+    queryKey: ['admin_auth_users'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('admin-list-users');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data.users as Record<string, { email: string; last_sign_in_at: string | null }>;
+    },
+    enabled: !!user && isAdmin,
+  });
+
   // Get all user profiles (admin only)
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ['admin_users'],
+    queryKey: ['admin_users', authUsersMap],
     queryFn: async () => {
       // Get profiles
       const { data: profiles, error: profilesError } = await supabase
@@ -42,9 +57,13 @@ export function useAdminUsers() {
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with their roles
+      // Combine profiles with their roles and auth data
       return (profiles || []).map(profile => ({
         ...profile,
+        is_active: (profile as any).is_active ?? true,
+        last_seen_at: (profile as any).last_seen_at ?? null,
+        email: authUsersMap[profile.user_id]?.email || undefined,
+        last_sign_in_at: authUsersMap[profile.user_id]?.last_sign_in_at || null,
         roles: (roles || [])
           .filter(r => r.user_id === profile.user_id)
           .map(r => r.role as AppRole),
@@ -123,10 +142,28 @@ export function useAdminUsers() {
     },
   });
 
+  // Toggle user active status
+  const toggleUserActive = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
+      const { data, error } = await supabase.functions.invoke('admin-toggle-user-active', {
+        body: { userId, isActive },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin_users'] });
+      toast.success(isActive ? 'Usuário ativado!' : 'Usuário desativado!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao alterar status do usuário');
+    },
+  });
+
   // Delete test user
   const deleteTestUser = useMutation({
     mutationFn: async (userId: string) => {
-      // First delete the profile (cascade will handle roles)
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -149,6 +186,7 @@ export function useAdminUsers() {
     isLoading,
     updateProfile,
     toggleAdminRole,
+    toggleUserActive,
     deleteTestUser,
   };
 }
