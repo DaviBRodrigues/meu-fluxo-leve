@@ -8,16 +8,31 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+/**
+ * Parse a date string (YYYY-MM-DD) as a LOCAL date, not UTC.
+ * new Date('2026-03-02') is parsed as UTC midnight, which becomes
+ * the previous day in negative UTC offsets (e.g. Brazil UTC-3).
+ */
+export function parseLocalDate(date: string | Date): Date {
+  if (date instanceof Date) return date;
+  // If it's a YYYY-MM-DD string, parse as local
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(date);
+}
+
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(date));
+  }).format(parseLocalDate(date));
 }
 
 export function formatRelativeDate(date: string | Date): string {
-  const dateObj = new Date(date);
+  const dateObj = parseLocalDate(date);
   
   if (isToday(dateObj)) {
     return 'Hoje';
@@ -34,7 +49,7 @@ export function formatShortDate(date: string | Date): string {
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'short',
-  }).format(new Date(date));
+  }).format(parseLocalDate(date));
 }
 
 export function formatMonthYear(date: Date): string {
