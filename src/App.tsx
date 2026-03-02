@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import Deactivated from "./pages/Deactivated";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import Accounts from "./pages/Accounts";
@@ -21,7 +22,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isDeactivated } = useAuth();
 
   if (loading) {
     return (
@@ -33,6 +34,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (isDeactivated) {
+    return <Deactivated />;
   }
 
   return <>{children}</>;

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import TransactionFilters, { FilterPeriod } from './TransactionFilters';
 import EmptyState from '@/components/shared/EmptyState';
 import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format } from 'date-fns';
+import { parseLocalDate } from '@/lib/format';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -24,7 +25,7 @@ interface TransactionListProps {
 function groupTransactionsByDate(transactions: Transaction[]): Record<string, Transaction[]> {
   return transactions.reduce((acc, transaction) => {
     // Use the date string for grouping (YYYY-MM-DD format from DB)
-    const dateKey = format(new Date(transaction.date), 'yyyy-MM-dd');
+    const dateKey = format(parseLocalDate(transaction.date), 'yyyy-MM-dd');
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
@@ -77,7 +78,7 @@ export default function TransactionList({
       }
 
       filtered = filtered.filter((t) => {
-        const transactionDate = new Date(t.date);
+        const transactionDate = parseLocalDate(t.date);
         return isAfter(transactionDate, startDate) || isEqual(transactionDate, startDate);
       });
     }

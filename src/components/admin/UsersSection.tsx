@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import { useAdminUsers, UserProfile } from '@/hooks/useAdminUsers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,8 @@ export function UsersSection() {
   
   // Admin role confirmation state
   const [adminRoleConfirm, setAdminRoleConfirm] = useState<{ user: UserProfile; makeAdmin: boolean } | null>(null);
+  // Deactivation confirmation state
+  const [toggleActiveConfirm, setToggleActiveConfirm] = useState<{ user: UserProfile; newIsActive: boolean } | null>(null);
 
   // Fetch stored credentials for test users
   const { data: storedCredentials = [] } = useQuery({
@@ -417,17 +420,21 @@ export function UsersSection() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {user.is_active !== false ? (
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Ativo
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                          <UserX className="h-3 w-3 mr-1" />
-                          Inativo
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={user.is_active !== false}
+                          onCheckedChange={(checked) => {
+                            setToggleActiveConfirm({ user, newIsActive: checked });
+                          }}
+                          disabled={toggleUserActive.isPending}
+                        />
+                        <span className={cn(
+                          'text-sm font-medium',
+                          user.is_active !== false ? 'text-emerald-500' : 'text-muted-foreground'
+                        )}>
+                          {user.is_active !== false ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -463,23 +470,7 @@ export function UsersSection() {
                             }`}
                           />
                         </Button>
-                        {/* Toggle active/inactive */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleUserActive.mutate({ 
-                            userId: user.user_id, 
-                            isActive: user.is_active === false 
-                          })}
-                          title={user.is_active !== false ? 'Desativar usuário' : 'Reativar usuário'}
-                          disabled={toggleUserActive.isPending}
-                        >
-                          {user.is_active !== false ? (
-                            <UserX className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <UserCheck className="h-4 w-4 text-emerald-500" />
-                          )}
-                        </Button>
+                        {/* Removed old toggle active button - now using Switch in Status column */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -957,6 +948,68 @@ export function UsersSection() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Toggle Active Confirmation Dialog */}
+      <AlertDialog
+        open={!!toggleActiveConfirm}
+        onOpenChange={(open) => {
+          if (!open) setToggleActiveConfirm(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {toggleActiveConfirm?.newIsActive ? (
+                <>
+                  <UserCheck className="h-5 w-5 text-emerald-500" />
+                  Reativar Usuário
+                </>
+              ) : (
+                <>
+                  <UserX className="h-5 w-5 text-destructive" />
+                  Desativar Usuário
+                </>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleActiveConfirm?.newIsActive ? (
+                <>
+                  Deseja <strong>reativar</strong> o usuário{' '}
+                  <strong>{toggleActiveConfirm?.user.full_name || toggleActiveConfirm?.user.email || 'sem nome'}</strong>?
+                  <br /><br />
+                  O usuário poderá acessar o sistema novamente normalmente.
+                </>
+              ) : (
+                <>
+                  Deseja <strong>desativar temporariamente</strong> o usuário{' '}
+                  <strong>{toggleActiveConfirm?.user.full_name || toggleActiveConfirm?.user.email || 'sem nome'}</strong>?
+                  <br /><br />
+                  O usuário será desconectado e verá uma mensagem informando que sua conta foi desativada. 
+                  Os dados serão mantidos e a conta poderá ser reativada a qualquer momento.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setToggleActiveConfirm(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (toggleActiveConfirm) {
+                  toggleUserActive.mutate({
+                    userId: toggleActiveConfirm.user.user_id,
+                    isActive: toggleActiveConfirm.newIsActive,
+                  });
+                  setToggleActiveConfirm(null);
+                }
+              }}
+              className={toggleActiveConfirm?.newIsActive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-destructive hover:bg-destructive/90'}
+            >
+              {toggleActiveConfirm?.newIsActive ? 'Sim, Reativar' : 'Sim, Desativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Admin Role Confirmation Dialog */}
       <AlertDialog
         open={!!adminRoleConfirm}

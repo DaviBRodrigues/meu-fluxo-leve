@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isDeactivated: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -17,6 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeactivated, setIsDeactivated] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -29,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Create profile on sign up
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            createProfileIfNotExists(session.user.id);
+            createProfileIfNotExists(session.user);
           }, 0);
         }
       }
@@ -54,13 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase.auth.getUser();
         if (error || !data.user) {
           console.warn('Session invalidated - forcing logout and reload');
-          // Clear local storage to remove any cached tokens
           localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_PROJECT_ID + '-auth-token');
           await supabase.auth.signOut({ scope: 'local' });
-          // Force full page reload to clear all state
           window.location.href = '/auth';
           return;
         }
+
+        // Check if user is banned (deactivated)
+        if (data.user.banned_until) {
+          const bannedUntil = new Date(data.user.banned_until);
+          if (bannedUntil > new Date()) {
+            setIsDeactivated(true);
+            return;
+          }
+        }
+        setIsDeactivated(false);
       } catch {
         // Network error - skip this check
       }
@@ -72,21 +82,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [session]);
 
-  const createProfileIfNotExists = async (userId: string) => {
+  const createProfileIfNotExists = async (authUser: User) => {
     const { data } = await supabase
       .from('profiles')
       .select('id')
-      .eq('user_id', userId)
+      .eq('user_id', authUser.id)
       .single();
 
+    const fullName = authUser.user_metadata?.full_name || null;
+
     if (!data) {
-      await supabase.from('profiles').insert({ user_id: userId });
+      await supabase.from('profiles').insert({ 
+        user_id: authUser.id,
+        full_name: fullName,
+      });
     } else {
-      // Update last_seen_at
+      // Update last_seen_at and full_name if missing
+      const updates: Record<string, unknown> = { 
+        last_seen_at: new Date().toISOString() 
+      };
+      if (fullName) {
+        updates.full_name = fullName;
+      }
       await supabase
         .from('profiles')
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq('user_id', userId);
+        .update(updates)
+        .eq('user_id', authUser.id);
     }
   };
 
@@ -115,11 +136,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    setIsDeactivated(false);
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isDeactivated, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

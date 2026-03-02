@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency } from '@/lib/format';
-import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MonthProjectionProps {
@@ -15,6 +18,7 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
   const { transactions, totalIncome, totalExpenses } = useTransactions({ month, year });
   const { dueReminders } = useRecurringReminders();
   const { totalBalance } = useAccounts();
+  const [customDailySpend, setCustomDailySpend] = useState<string>('');
 
   // Calculate days elapsed and remaining in month (using local date)
   const now = new Date();
@@ -30,7 +34,13 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
     .filter(t => t.type === 'expense' && t.recurrence === 'variable')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const dailyAverage = currentDay > 0 ? variableExpenses / currentDay : 0;
+  const calculatedDailyAverage = currentDay > 0 ? variableExpenses / currentDay : 0;
+  
+  // Use custom daily spend if provided, otherwise use calculated average
+  const customValue = parseFloat(customDailySpend.replace(/\./g, '').replace(',', '.'));
+  const dailyAverage = customDailySpend && !isNaN(customValue) && customValue > 0 
+    ? customValue 
+    : calculatedDailyAverage;
 
   // Project remaining variable expenses
   const projectedVariableExpenses = dailyAverage * daysRemaining;
@@ -46,6 +56,7 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
   const projectedSavings = totalIncome - totalProjectedExpenses;
 
   const isPositive = projectedSavings >= 0;
+  const isUsingCustom = customDailySpend && !isNaN(customValue) && customValue > 0;
 
   return (
     <Card>
@@ -57,6 +68,30 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Daily Spending Estimate */}
+          <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+            <div className="flex items-center gap-2">
+              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label className="text-sm font-medium">Estimativa de gasto diário</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">R$</span>
+              <Input
+                type="text"
+                placeholder={calculatedDailyAverage.toFixed(2).replace('.', ',')}
+                value={customDailySpend}
+                onChange={(e) => setCustomDailySpend(e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isUsingCustom 
+                ? `Usando sua estimativa: ${formatCurrency(customValue)}/dia`
+                : `Média calculada: ${formatCurrency(calculatedDailyAverage)}/dia (baseada nos gastos variáveis)`
+              }
+            </p>
+          </div>
+
           {/* Main Projection */}
           <div className={cn(
             'p-4 rounded-lg',
