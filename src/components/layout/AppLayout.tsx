@@ -63,8 +63,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     : baseNavItems;
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      window.location.href = '/auth';
+    }
   };
 
   const NavLinks = () => (
