@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
+import { useAvatar } from '@/hooks/useAvatar';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,17 +12,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCategories } from '@/hooks/useCategories';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check } from 'lucide-react';
+import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User } from 'lucide-react';
 import { TransactionType } from '@/types/database';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const { user, loading, signOut } = useAuth();
+  const { profile } = useProfile();
+  const { uploadAvatar, uploading } = useAvatar();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -313,6 +319,60 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Profile Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Perfil
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <Avatar className="w-20 h-20">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {profile?.full_name
+                      ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                      : user.email?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Camera className="w-6 h-6 text-white" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) await uploadAvatar(file);
+                  }}
+                />
+              </div>
+              <div>
+                <p className="font-medium">{profile?.full_name || 'Sem nome'}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? 'Enviando...' : 'Alterar foto'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Account Section */}
         <Card>

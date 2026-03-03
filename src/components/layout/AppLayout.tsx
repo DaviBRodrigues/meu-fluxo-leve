@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { useProfile } from '@/hooks/useProfile';
+import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,8 @@ import {
   TrendingUp,
   History,
   Shield,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
@@ -46,6 +50,8 @@ const baseNavItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRoles();
+  const { profile } = useProfile();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -86,7 +92,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </>
   );
 
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'U';
+  const avatarUrl = profile?.avatar_url;
+  const displayName = profile?.full_name || user?.email;
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,16 +111,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 px-4 py-6 space-y-2">
           <NavLinks />
         </nav>
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-2">
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <span className="text-sm">{theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}</span>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3">
                 <Avatar className="w-8 h-8">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Avatar" />}
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate text-sm">{user?.email}</span>
+                <span className="truncate text-sm">{displayName}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -152,6 +167,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="font-semibold">FinançasPro</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
           {dueReminders.length > 0 && (
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
@@ -162,6 +180,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar className="w-8 h-8">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Avatar" />}
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
                     {initials}
                   </AvatarFallback>
