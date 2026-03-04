@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import logo from '@/assets/logo.jpg';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -108,9 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col border-r border-border bg-card">
         <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <Wallet className="w-5 h-5 text-primary" />
-          </div>
+          <img src={logo} alt="Equilibra" className="w-10 h-10 rounded-xl" />
           <span className="text-lg font-bold">Equilibra</span>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
@@ -159,9 +158,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-primary" />
-                </div>
+                <img src={logo} alt="Equilibra" className="w-10 h-10 rounded-xl" />
                 <span className="text-lg font-bold">Equilibra</span>
               </div>
               <nav className="px-4 py-6 space-y-2">
