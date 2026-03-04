@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/logo.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
