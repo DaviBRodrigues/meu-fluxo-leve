@@ -18,7 +18,8 @@ import { useBudgets } from '@/hooks/useBudgets';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User } from 'lucide-react';
+import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette } from 'lucide-react';
+import ThemeSection from '@/components/settings/ThemeSection';
 import { TransactionType } from '@/types/database';
 import { toast } from 'sonner';
 
@@ -113,12 +114,18 @@ export default function SettingsPage() {
           <p className="text-muted-foreground mt-1">Gerencie suas preferências</p>
         </div>
 
-        <Tabs defaultValue="budgets" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="appearance" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="appearance">Aparência</TabsTrigger>
             <TabsTrigger value="budgets">Orçamentos</TabsTrigger>
             <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="reminders">Lembretes</TabsTrigger>
           </TabsList>
+
+          {/* Appearance Tab */}
+          <TabsContent value="appearance" className="mt-6">
+            <ThemeSection />
+          </TabsContent>
 
           {/* Budgets Tab */}
           <TabsContent value="budgets" className="mt-6 space-y-4">

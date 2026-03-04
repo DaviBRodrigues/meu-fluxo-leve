@@ -5,6 +5,15 @@
       try {
         const t = localStorage.getItem('theme');
         if (t === 'light') document.documentElement.classList.remove('dark');
+        const a = JSON.parse(localStorage.getItem('theme-accent') || '{}');
+        if (a.hue != null) {
+          const isDark = t !== 'light';
+          const l = isDark ? 42 : 36;
+          const s = a.saturation || 76;
+          ['--primary','--ring','--sidebar-primary','--sidebar-ring','--chart-1','--success','--income'].forEach(function(p) {
+            document.documentElement.style.setProperty(p, a.hue + ' ' + s + '% ' + l + '%');
+          });
+        }
       } catch(e) {}
     </script>
     <meta charset="UTF-8" />
