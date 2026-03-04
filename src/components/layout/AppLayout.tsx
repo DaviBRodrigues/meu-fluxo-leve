@@ -111,7 +111,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
             <Wallet className="w-5 h-5 text-primary" />
           </div>
-          <span className="text-lg font-bold">FinançasPro</span>
+          <span className="text-lg font-bold">Equilibra</span>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
           <NavLinks />
@@ -162,14 +162,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <Wallet className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-lg font-bold">FinançasPro</span>
+                <span className="text-lg font-bold">Equilibra</span>
               </div>
               <nav className="px-4 py-6 space-y-2">
                 <NavLinks />
               </nav>
             </SheetContent>
           </Sheet>
-          <span className="font-semibold">FinançasPro</span>
+          <span className="font-semibold">Equilibra</span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
