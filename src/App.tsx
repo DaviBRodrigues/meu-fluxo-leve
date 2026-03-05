@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
+import { LayoutThemeProvider } from "@/contexts/LayoutThemeContext";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Deactivated from "./pages/Deactivated";
