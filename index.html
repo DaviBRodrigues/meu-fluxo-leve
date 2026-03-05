@@ -3,17 +3,21 @@
   <head>
     <script>
       try {
-        const t = localStorage.getItem('theme');
+        var t = localStorage.getItem('theme');
         if (t === 'light') document.documentElement.classList.remove('dark');
-        const a = JSON.parse(localStorage.getItem('theme-accent') || '{}');
-        if (a.hue != null) {
-          const isDark = t !== 'light';
-          const l = isDark ? 42 : 36;
-          const s = a.saturation || 76;
-          ['--primary','--ring','--sidebar-primary','--sidebar-ring','--chart-1','--success','--income'].forEach(function(p) {
-            document.documentElement.style.setProperty(p, a.hue + ' ' + s + '% ' + l + '%');
-          });
+        
+        // Apply saved palette
+        var pn = localStorage.getItem('palette-name');
+        if (pn === 'custom') {
+          var cp = JSON.parse(localStorage.getItem('custom-palette') || '{}');
+          var pal = t !== 'light' ? cp.dark : cp.light;
+          if (pal) {
+            var map = {background:'--background',foreground:'--foreground',card:'--card',cardForeground:'--card-foreground',popover:'--popover',popoverForeground:'--popover-foreground',primary:'--primary',primaryForeground:'--primary-foreground',secondary:'--secondary',secondaryForeground:'--secondary-foreground',muted:'--muted',mutedForeground:'--muted-foreground',accent:'--accent',accentForeground:'--accent-foreground',destructive:'--destructive',destructiveForeground:'--destructive-foreground',success:'--success',successForeground:'--success-foreground',warning:'--warning',warningForeground:'--warning-foreground',income:'--income',incomeForeground:'--income-foreground',expense:'--expense',expenseForeground:'--expense-foreground',border:'--border',input:'--input',ring:'--ring',sidebarBackground:'--sidebar-background',sidebarForeground:'--sidebar-foreground',sidebarPrimary:'--sidebar-primary',sidebarPrimaryForeground:'--sidebar-primary-foreground',sidebarAccent:'--sidebar-accent',sidebarAccentForeground:'--sidebar-accent-foreground',sidebarBorder:'--sidebar-border',sidebarRing:'--sidebar-ring',chart1:'--chart-1',chart2:'--chart-2',chart3:'--chart-3',chart4:'--chart-4',chart5:'--chart-5'};
+            for (var k in map) { if (pal[k]) document.documentElement.style.setProperty(map[k], pal[k]); }
+          }
         }
+        
+        // Apply layout preset
         var lp = localStorage.getItem('layout-preset');
         if (lp) {
           document.documentElement.setAttribute('data-layout', lp);
