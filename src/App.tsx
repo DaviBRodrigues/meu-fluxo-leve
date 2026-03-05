@@ -144,7 +144,11 @@ function AppRoutes() {
 
 function ThemedApp() {
   useTheme(); // Applies theme class to document
-  return <AppRoutes />;
+  return (
+    <LayoutThemeProvider>
+      <AppRoutes />
+    </LayoutThemeProvider>
+  );
 }
 
 const App = () => (

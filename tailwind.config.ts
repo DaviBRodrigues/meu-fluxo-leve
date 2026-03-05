@@ -81,6 +81,19 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
       },
+      fontFamily: {
+        sans: ['var(--font-family)'],
+        number: ['var(--number-font-family)'],
+      },
+      boxShadow: {
+        'card': 'var(--card-shadow)',
+        'button': 'var(--button-shadow)',
+      },
+      spacing: {
+        'container': 'var(--container-padding)',
+        'container-lg': 'var(--container-padding-lg)',
+        'sidebar': 'var(--sidebar-width)',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
