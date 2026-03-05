@@ -45,6 +45,13 @@
     --ring: 142 76% 36%;
 
     --radius: 0.75rem;
+    --font-family: 'Inter', 'system-ui', sans-serif;
+    --number-font-family: 'Inter', 'system-ui', sans-serif;
+    --container-padding: 1rem;
+    --container-padding-lg: 2rem;
+    --sidebar-width: 16rem;
+    --card-shadow: 0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.06);
+    --button-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -103,6 +110,9 @@
     --input: 215 28% 17%;
     --ring: 142 76% 42%;
 
+    --card-shadow: 0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px -1px rgba(0,0,0,0.3);
+    --button-shadow: none;
+
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 213 31% 91%;
     --sidebar-primary: 142 76% 42%;
@@ -127,6 +137,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-family);
   }
 }
 
@@ -134,4 +145,33 @@
   .glass {
     @apply bg-card/80 backdrop-blur-sm;
   }
+
+  .font-number {
+    font-family: var(--number-font-family);
+  }
+}
+
+/* Layout preset overrides */
+[data-layout="modern-glass"] .card-themed {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(8px);
+}
+
+[data-layout="professional-compact"] .card-themed {
+  background: hsl(var(--card));
+  backdrop-filter: none;
+}
+
+[data-layout="neumorphic-soft"] .card-themed {
+  background: hsl(var(--card));
+  backdrop-filter: none;
+}
+
+/* Neumorphic button effect */
+[data-layout="neumorphic-soft"] button:not([data-no-neumorphic]) {
+  transition: box-shadow 0.15s ease;
+}
+
+[data-layout="neumorphic-soft"] button:not([data-no-neumorphic]):active {
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1), inset -2px -2px 4px rgba(255,255,255,0.5) !important;
 }

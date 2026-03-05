@@ -14,6 +14,22 @@
             document.documentElement.style.setProperty(p, a.hue + ' ' + s + '% ' + l + '%');
           });
         }
+        var lp = localStorage.getItem('layout-preset');
+        if (lp) {
+          document.documentElement.setAttribute('data-layout', lp);
+          var presets = {
+            'modern-glass': { r: '0.75rem', sw: '16rem', cp: '1rem', cpl: '2rem' },
+            'professional-compact': { r: '0.25rem', sw: '14rem', cp: '0.75rem', cpl: '1.25rem' },
+            'neumorphic-soft': { r: '1.25rem', sw: '17rem', cp: '1.25rem', cpl: '2.5rem' }
+          };
+          var p = presets[lp];
+          if (p) {
+            document.documentElement.style.setProperty('--radius', p.r);
+            document.documentElement.style.setProperty('--sidebar-width', p.sw);
+            document.documentElement.style.setProperty('--container-padding', p.cp);
+            document.documentElement.style.setProperty('--container-padding-lg', p.cpl);
+          }
+        }
       } catch(e) {}
     </script>
     <meta charset="UTF-8" />

@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
+import { useLayoutTheme } from '@/contexts/LayoutThemeContext';
 
 const baseNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -57,6 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const { dueReminders } = useRecurringReminders();
+  const { config } = useLayoutTheme();
 
   // Add admin link if user is admin
   const navItems = isAdmin
@@ -107,7 +109,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col border-r border-border bg-card">
+      <aside
+        className={cn(
+          "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-border",
+          config.glassEnabled ? 'bg-card/80 backdrop-blur-sm' : 'bg-card'
+        )}
+        style={{ width: 'var(--sidebar-width)' }}
+      >
         <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
           <img src={logo} alt="Equilibra" className="w-10 h-10 rounded-xl" />
           <span className="text-lg font-bold">Equilibra</span>
@@ -205,8 +213,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="lg:pl-64">
-        <div className="p-4 lg:p-8">{children}</div>
+      <main style={{ paddingLeft: undefined }} className="lg:pl-[var(--sidebar-width)]">
+        <div className="p-[var(--container-padding)] lg:p-[var(--container-padding-lg)]">{children}</div>
       </main>
     </div>
   );
