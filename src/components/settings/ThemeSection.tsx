@@ -1,18 +1,125 @@
 import { useTheme, PRESET_ACCENTS } from '@/hooks/useTheme';
+import { useLayoutTheme, LAYOUT_PRESETS, type LayoutPreset } from '@/contexts/LayoutThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Sun, Moon, Palette, RotateCcw } from 'lucide-react';
+import { Sun, Moon, Palette, RotateCcw, Layout, Layers, Grid3x3, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
+const PRESET_ICONS: Record<LayoutPreset, React.ReactNode> = {
+  'modern-glass': <Layers className="w-6 h-6" />,
+  'professional-compact': <Grid3x3 className="w-6 h-6" />,
+  'neumorphic-soft': <Circle className="w-6 h-6" />,
+};
+
+function PresetPreview({ preset }: { preset: LayoutPreset }) {
+  const config = LAYOUT_PRESETS[preset];
+  const borderRadius = preset === 'professional-compact' ? '4px' : preset === 'neumorphic-soft' ? '20px' : '12px';
+
+  return (
+    <div className="w-full h-20 bg-muted/50 rounded-lg p-2 flex gap-1.5">
+      {/* Mini sidebar */}
+      <div
+        className="h-full bg-card border border-border flex flex-col gap-1 p-1"
+        style={{
+          width: preset === 'professional-compact' ? '20%' : '25%',
+          borderRadius,
+        }}
+      >
+        <div className="w-full h-1.5 rounded-full bg-primary/40" />
+        <div className="w-3/4 h-1 rounded-full bg-muted-foreground/20" />
+        <div className="w-3/4 h-1 rounded-full bg-muted-foreground/20" />
+      </div>
+      {/* Mini content */}
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex-1 h-7 bg-card border border-border"
+              style={{
+                borderRadius,
+                boxShadow: preset === 'neumorphic-soft'
+                  ? '2px 2px 4px rgba(0,0,0,0.06), -2px -2px 4px rgba(255,255,255,0.5)'
+                  : preset === 'modern-glass'
+                    ? '0 1px 3px rgba(0,0,0,0.05)'
+                    : 'none',
+              }}
+            />
+          ))}
+        </div>
+        <div
+          className="flex-1 bg-card border border-border"
+          style={{ borderRadius }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function ThemeSection() {
   const { theme, toggleTheme, accent, setPresetAccent, setCustomAccent, resetAccent } = useTheme();
+  const { layoutPreset, setLayoutPreset } = useLayoutTheme();
   const [showCustom, setShowCustom] = useState(accent.name === 'custom');
 
   return (
     <div className="space-y-4">
+      {/* Layout Design Preset */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layout className="w-5 h-5" />
+            Estilo de Layout
+          </CardTitle>
+          <CardDescription>Escolha a personalidade visual do design</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3">
+            {(Object.keys(LAYOUT_PRESETS) as LayoutPreset[]).map((key) => {
+              const preset = LAYOUT_PRESETS[key];
+              const isActive = layoutPreset === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setLayoutPreset(key)}
+                  className={cn(
+                    'w-full text-left p-4 rounded-xl border-2 transition-all',
+                    isActive
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
+                  )}
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className={cn(
+                        'p-2 rounded-lg shrink-0',
+                        isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {PRESET_ICONS[key]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{preset.label}</span>
+                        {isActive && (
+                          <span className="text-[10px] font-medium bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                            Ativo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{preset.description}</p>
+                    </div>
+                  </div>
+                  <PresetPreview preset={key} />
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Light/Dark Mode */}
       <Card>
         <CardHeader>
