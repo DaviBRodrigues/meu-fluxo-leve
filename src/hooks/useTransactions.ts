@@ -212,12 +212,18 @@ export function useTransactions(filters?: TransactionFilters) {
     },
   });
 
+  const isTransfer = (t: Transaction) => t.description?.startsWith('[Transferência]');
+
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
+    .filter(t => t.type === 'income' && !isTransfer(t))
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
+    .filter(t => t.type === 'expense' && !isTransfer(t))
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalTransfers = transactions
+    .filter(t => t.type === 'expense' && isTransfer(t))
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const balance = totalIncome - totalExpenses;
@@ -227,6 +233,7 @@ export function useTransactions(filters?: TransactionFilters) {
     isLoading,
     totalIncome,
     totalExpenses,
+    totalTransfers,
     balance,
     createTransaction,
     updateTransaction,

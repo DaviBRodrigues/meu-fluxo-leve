@@ -117,7 +117,9 @@ export default function BudgetProgress({ month, year }: BudgetProgressProps) {
                 className={cn(
                   'h-1.5',
                   budget.isOver && '[&>div]:bg-destructive',
-                  budget.isWarning && '[&>div]:bg-warning'
+                  budget.isWarning && '[&>div]:bg-warning',
+                  !budget.isOver && !budget.isWarning && budget.percentage >= 70 && '[&>div]:bg-yellow-500',
+                  !budget.isOver && !budget.isWarning && budget.percentage < 70 && '[&>div]:bg-blue-500'
                 )}
               />
             </div>
