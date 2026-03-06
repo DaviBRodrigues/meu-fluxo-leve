@@ -3,7 +3,7 @@ import { useLayoutTheme, LAYOUT_PRESETS, type LayoutPreset } from '@/contexts/La
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+
 import { Sun, Moon, Palette, RotateCcw, Layout, Layers, Grid3x3, Circle, Paintbrush, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -51,66 +51,102 @@ function PaletteSwatchPreview({ palette }: { palette: ColorPalette }) {
   );
 }
 
-// Editable color row
-function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  // Parse "H S% L%" format
-  const parts = value.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
-  const h = parts ? parseFloat(parts[1]) : 0;
-  const s = parts ? parseFloat(parts[2]) : 50;
-  const l = parts ? parseFloat(parts[3]) : 50;
+// Helper: HSL string to hex
+function hslToHex(hslStr: string): string {
+  const parts = hslStr.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
+  if (!parts) return '#808080';
+  const h = parseFloat(parts[1]) / 360;
+  const s = parseFloat(parts[2]) / 100;
+  const l = parseFloat(parts[3]) / 100;
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  let r, g, b;
+  if (s === 0) { r = g = b = l; } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  const toHex = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
+// Helper: hex to HSL string
+function hexToHsl(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '0 0% 50%';
+  const r = parseInt(result[1], 16) / 255;
+  const g = parseInt(result[2], 16) / 255;
+  const b = parseInt(result[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+// Simple color picker row
+function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const hexValue = hslToHex(value);
   return (
     <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-lg border border-border shrink-0" style={{ backgroundColor: `hsl(${value})` }} />
-      <div className="flex-1 min-w-0">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <div className="flex gap-2 mt-1">
-          <div className="flex-1">
-            <Slider min={0} max={360} step={1} value={[h]} onValueChange={([v]) => onChange(`${v} ${s}% ${l}%`)} />
-          </div>
-          <div className="flex-1">
-            <Slider min={0} max={100} step={1} value={[s]} onValueChange={([v]) => onChange(`${h} ${v}% ${l}%`)} />
-          </div>
-          <div className="flex-1">
-            <Slider min={0} max={100} step={1} value={[l]} onValueChange={([v]) => onChange(`${h} ${s}% ${v}%`)} />
-          </div>
-        </div>
-        <div className="flex gap-2 text-[10px] text-muted-foreground mt-0.5">
-          <span className="flex-1">Matiz</span>
-          <span className="flex-1">Saturação</span>
-          <span className="flex-1">Luminosidade</span>
-        </div>
-      </div>
+      <label className="relative cursor-pointer group">
+        <div
+          className="w-10 h-10 rounded-lg border-2 border-border group-hover:border-primary transition-colors shadow-sm"
+          style={{ backgroundColor: `hsl(${value})` }}
+        />
+        <input
+          type="color"
+          value={hexValue}
+          onChange={(e) => onChange(hexToHsl(e.target.value))}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </label>
+      <span className="text-sm font-medium">{label}</span>
     </div>
   );
 }
 
 const EDITABLE_GROUPS = [
-  { label: 'Cores Principais', keys: [
-    { key: 'background', label: 'Fundo' },
-    { key: 'foreground', label: 'Texto' },
-    { key: 'primary', label: 'Primária' },
-    { key: 'primaryForeground', label: 'Texto Primária' },
+  { label: '🎨 Cores Principais', description: 'Fundo da tela, textos e cor de destaque', keys: [
+    { key: 'background', label: 'Cor de fundo' },
+    { key: 'foreground', label: 'Cor do texto' },
+    { key: 'primary', label: 'Cor de destaque (botões)' },
+    { key: 'primaryForeground', label: 'Texto dos botões' },
   ]},
-  { label: 'Cards e Superfícies', keys: [
-    { key: 'card', label: 'Card' },
-    { key: 'cardForeground', label: 'Texto Card' },
-    { key: 'secondary', label: 'Secundária' },
-    { key: 'muted', label: 'Muted' },
-    { key: 'mutedForeground', label: 'Texto Muted' },
+  { label: '📦 Caixas e Painéis', description: 'Cor dos cards, áreas secundárias e textos suaves', keys: [
+    { key: 'card', label: 'Fundo dos cards' },
+    { key: 'cardForeground', label: 'Texto dos cards' },
+    { key: 'secondary', label: 'Áreas secundárias' },
+    { key: 'muted', label: 'Áreas discretas' },
+    { key: 'mutedForeground', label: 'Textos discretos' },
   ]},
-  { label: 'Semânticas', keys: [
-    { key: 'success', label: 'Sucesso' },
-    { key: 'warning', label: 'Alerta' },
-    { key: 'destructive', label: 'Destrutiva' },
-    { key: 'income', label: 'Receita' },
-    { key: 'expense', label: 'Despesa' },
+  { label: '🚦 Indicadores', description: 'Cores de receita, despesa, alertas e erros', keys: [
+    { key: 'success', label: 'Sucesso / Positivo' },
+    { key: 'warning', label: 'Atenção / Alerta' },
+    { key: 'destructive', label: 'Erro / Excluir' },
+    { key: 'income', label: 'Receita (entradas)' },
+    { key: 'expense', label: 'Despesa (saídas)' },
   ]},
-  { label: 'Bordas e Sidebar', keys: [
-    { key: 'border', label: 'Borda' },
-    { key: 'ring', label: 'Ring/Foco' },
-    { key: 'sidebarBackground', label: 'Fundo Sidebar' },
-    { key: 'sidebarPrimary', label: 'Primária Sidebar' },
+  { label: '📐 Bordas e Menu Lateral', description: 'Linhas, contornos e cor do menu lateral', keys: [
+    { key: 'border', label: 'Linhas e bordas' },
+    { key: 'ring', label: 'Contorno de foco' },
+    { key: 'sidebarBackground', label: 'Fundo do menu lateral' },
+    { key: 'sidebarPrimary', label: 'Destaque do menu lateral' },
   ]},
 ];
 
@@ -263,10 +299,16 @@ export default function ThemeSection() {
 
               {/* Preview bar */}
               <div className="flex gap-1.5 p-3 rounded-lg border bg-card">
-                {(['primary', 'background', 'card', 'secondary', 'muted', 'success', 'warning', 'destructive'] as const).map(key => (
+                {([
+                  { key: 'primary', label: 'Destaque' },
+                  { key: 'background', label: 'Fundo' },
+                  { key: 'card', label: 'Cards' },
+                  { key: 'success', label: 'Receita' },
+                  { key: 'destructive', label: 'Despesa' },
+                ] as const).map(({ key, label }) => (
                   <div key={key} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full h-6 rounded-md border border-foreground/10" style={{ backgroundColor: `hsl(${currentEditing[key]})` }} />
-                    <span className="text-[9px] text-muted-foreground truncate w-full text-center">{key}</span>
+                    <span className="text-[9px] text-muted-foreground truncate w-full text-center">{label}</span>
                   </div>
                 ))}
               </div>
@@ -278,11 +320,14 @@ export default function ThemeSection() {
                     className="w-full flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
                     onClick={() => setExpandedGroup(expandedGroup === group.label ? null : group.label)}
                   >
-                    <span className="text-sm font-medium">{group.label}</span>
-                    {expandedGroup === group.label ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <div className="text-left">
+                      <span className="text-sm font-medium">{group.label}</span>
+                      <p className="text-[11px] text-muted-foreground">{group.description}</p>
+                    </div>
+                    {expandedGroup === group.label ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
                   </button>
                   {expandedGroup === group.label && (
-                    <div className="p-3 space-y-4">
+                    <div className="p-3 grid grid-cols-2 gap-3">
                       {group.keys.map(({ key, label }) => (
                         <ColorRow
                           key={key}
