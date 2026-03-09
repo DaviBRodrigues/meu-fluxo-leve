@@ -32,7 +32,7 @@ import {
   Shield,
   Sun,
   Moon,
-  Upload,
+  
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
