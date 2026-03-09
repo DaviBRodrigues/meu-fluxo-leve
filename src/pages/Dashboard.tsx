@@ -11,6 +11,7 @@ import ExpensesByCategory from '@/components/dashboard/ExpensesByCategory';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
+import InstallmentsTracker from '@/components/dashboard/InstallmentsTracker';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransferForm from '@/components/transactions/TransferForm';
