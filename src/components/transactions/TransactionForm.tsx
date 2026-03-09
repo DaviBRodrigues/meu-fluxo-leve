@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,7 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCategories } from '@/hooks/useCategories';
 import { useAccounts } from '@/hooks/useAccounts';
-import { TransactionType, Category, Account } from '@/types/database';
+import { TransactionType } from '@/types/database';
 import { Input } from '@/components/ui/input';
 
 const transactionSchema = z.object({
@@ -28,6 +28,8 @@ const transactionSchema = z.object({
   account_id: z.string().min(1, 'Conta é obrigatória'),
   recurrence: z.enum(['fixed', 'variable']),
   is_recurring: z.boolean(),
+  is_installment: z.boolean(),
+  installment_count: z.number().min(2).max(120).optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -46,6 +48,8 @@ interface TransactionFormProps {
     date: string;
     recurrence: 'fixed' | 'variable';
     is_recurring: boolean;
+    is_installment?: boolean;
+    installment_count?: number;
     notes: string | null;
   }) => void;
   isLoading?: boolean;
@@ -73,12 +77,16 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
       account_id: '',
       recurrence: 'variable',
       is_recurring: false,
+      is_installment: false,
+      installment_count: undefined,
       notes: '',
     },
   });
 
   const watchRecurrence = watch('recurrence');
   const watchIsRecurring = watch('is_recurring');
+  const watchIsInstallment = watch('is_installment');
+  const watchInstallmentCount = watch('installment_count');
 
   const handleFormSubmit = (data: FormData) => {
     const amount = parseFloat(data.amount.replace(/\./g, '').replace(',', '.'));
@@ -93,21 +101,25 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
       date: format(data.date, 'yyyy-MM-dd'),
       recurrence: data.recurrence,
       is_recurring: data.is_recurring,
+      is_installment: data.is_installment,
+      installment_count: data.is_installment ? data.installment_count : undefined,
       notes: data.notes || null,
     });
 
     reset();
+    setDate(new Date());
     onClose();
   };
 
   const handleClose = () => {
     reset();
+    setDate(new Date());
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {type === 'income' ? 'Nova Receita' : 'Nova Despesa'}
@@ -128,7 +140,7 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor</Label>
+            <Label htmlFor="amount">Valor {watchIsInstallment && watchInstallmentCount ? `(total: será dividido em ${watchInstallmentCount}x)` : ''}</Label>
             <CurrencyInput
               id="amount"
               placeholder="0,00"
@@ -227,14 +239,19 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
 
           <div className="flex items-center justify-between py-2">
             <div className="space-y-0.5">
-              <Label>Tipo de despesa</Label>
+              <Label>Tipo de {type === 'income' ? 'receita' : 'despesa'}</Label>
               <p className="text-sm text-muted-foreground">
                 {watchRecurrence === 'fixed' ? 'Fixa (recorrente)' : 'Variável (eventual)'}
               </p>
             </div>
             <Select
               value={watchRecurrence}
-              onValueChange={(v: 'fixed' | 'variable') => setValue('recurrence', v)}
+              onValueChange={(v: 'fixed' | 'variable') => {
+                setValue('recurrence', v);
+                if (v === 'variable') {
+                  setValue('is_recurring', false);
+                }
+              }}
             >
               <SelectTrigger className="w-32">
                 <SelectValue />
@@ -256,6 +273,45 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
                 checked={watchIsRecurring}
                 onCheckedChange={(v) => setValue('is_recurring', v)}
               />
+            </div>
+          )}
+
+          {/* Parcelamento */}
+          {type === 'expense' && (
+            <div className="border border-border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Parcelamento</Label>
+                  <p className="text-sm text-muted-foreground">Dividir em parcelas mensais</p>
+                </div>
+                <Switch
+                  checked={watchIsInstallment}
+                  onCheckedChange={(v) => {
+                    setValue('is_installment', v);
+                    if (!v) setValue('installment_count', undefined);
+                    else setValue('installment_count', 2);
+                  }}
+                />
+              </div>
+
+              {watchIsInstallment && (
+                <div className="space-y-2">
+                  <Label>Número de parcelas</Label>
+                  <Input
+                    type="number"
+                    min={2}
+                    max={120}
+                    value={watchInstallmentCount || ''}
+                    onChange={(e) => setValue('installment_count', parseInt(e.target.value) || 2)}
+                    placeholder="Ex: 12"
+                  />
+                  {watchInstallmentCount && watch('amount') && (
+                    <p className="text-sm text-muted-foreground">
+                      {watchInstallmentCount}x de R$ {(parseFloat(watch('amount').replace(/\./g, '').replace(',', '.')) / watchInstallmentCount).toFixed(2).replace('.', ',')}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

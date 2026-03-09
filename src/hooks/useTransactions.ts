@@ -77,10 +77,72 @@ export function useTransactions(filters?: TransactionFilters) {
       is_recurring?: boolean;
       recurring_day?: number | null;
       notes?: string | null;
+      is_installment?: boolean;
+      installment_count?: number;
     }) => {
+      const { is_installment, installment_count, ...baseTransaction } = transaction;
+
+      // If installment, create multiple transactions
+      if (is_installment && installment_count && installment_count >= 2) {
+        const installmentGroupId = crypto.randomUUID();
+        const installmentAmount = Math.round((transaction.amount / installment_count) * 100) / 100;
+        const baseDate = new Date(transaction.date + 'T12:00:00');
+        
+        const installments = [];
+        for (let i = 0; i < installment_count; i++) {
+          const installmentDate = addMonths(baseDate, i);
+          installments.push({
+            ...baseTransaction,
+            user_id: user!.id,
+            amount: installmentAmount,
+            description: `${transaction.description} (${i + 1}/${installment_count})`,
+            date: format(installmentDate, 'yyyy-MM-dd'),
+            is_installment: true,
+            installment_count,
+            installment_number: i + 1,
+            installment_group_id: installmentGroupId,
+          });
+        }
+
+        const { data, error } = await supabase
+          .from('transactions')
+          .insert(installments)
+          .select();
+
+        if (error) throw error;
+
+        // Only update balance for the first installment (current month)
+        const firstInstallmentAmount = transaction.type === 'income' ? installmentAmount : -installmentAmount;
+        const { data: account } = await supabase
+          .from('accounts')
+          .select('balance')
+          .eq('id', transaction.account_id)
+          .single();
+        
+        if (account) {
+          await supabase
+            .from('accounts')
+            .update({ balance: Number(account.balance) + firstInstallmentAmount })
+            .eq('id', transaction.account_id);
+        }
+
+        // Log activity
+        await logActivity.mutateAsync({
+          action_type: 'create',
+          entity_type: 'transaction',
+          entity_id: data[0].id,
+          entity_description: `${transaction.description} (${installment_count}x de ${formatCurrency(installmentAmount)})`,
+          new_data: JSON.parse(JSON.stringify({ ...transaction, installment_count })) as Json,
+          amount: transaction.amount,
+        });
+
+        return data[0];
+      }
+
+      // Normal transaction (no installments)
       const { data, error } = await supabase
         .from('transactions')
-        .insert({ ...transaction, user_id: user!.id })
+        .insert({ ...baseTransaction, user_id: user!.id })
         .select()
         .single();
 
@@ -117,7 +179,11 @@ export function useTransactions(filters?: TransactionFilters) {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       const typeLabel = variables.type === 'income' ? 'Receita' : 'Despesa';
-      toast.success(`${typeLabel} de ${formatCurrency(variables.amount)} adicionada com sucesso!`);
+      if (variables.is_installment && variables.installment_count) {
+        toast.success(`${typeLabel} parcelada em ${variables.installment_count}x criada com sucesso!`);
+      } else {
+        toast.success(`${typeLabel} de ${formatCurrency(variables.amount)} adicionada com sucesso!`);
+      }
     },
     onError: () => {
       toast.error('Erro ao adicionar transação');

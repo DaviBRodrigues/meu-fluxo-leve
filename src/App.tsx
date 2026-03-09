@@ -139,14 +139,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/importar"
-        element={
-          <ProtectedRoute>
-            <Import />
-          </ProtectedRoute>
-        }
-      />
+
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
