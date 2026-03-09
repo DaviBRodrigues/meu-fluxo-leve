@@ -32,7 +32,7 @@ import {
   Shield,
   Sun,
   Moon,
-   'lucide-react';
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useLayoutTheme } from '@/contexts/LayoutThemeContext';
@@ -47,7 +47,9 @@ const baseNavItems = [
   { href: '/metas', label: 'Metas', icon: Target },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/historico', label: 'Histórico', icon: History },
-  { href:port default function AppLayout({ children }: { children: React.ReactNode }) {
+];
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRoles();
   const { profile } = useProfile();
