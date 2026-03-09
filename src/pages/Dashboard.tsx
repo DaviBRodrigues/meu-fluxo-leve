@@ -11,6 +11,7 @@ import ExpensesByCategory from '@/components/dashboard/ExpensesByCategory';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
+import InstallmentsTracker from '@/components/dashboard/InstallmentsTracker';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransferForm from '@/components/transactions/TransferForm';
@@ -259,6 +260,11 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* Installments Tracker */}
+        <motion.div variants={itemVariants}>
+          <InstallmentsTracker />
+        </motion.div>
 
         {/* Charts */}
         <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
