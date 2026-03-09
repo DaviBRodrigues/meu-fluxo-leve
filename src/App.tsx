@@ -20,7 +20,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
-import Import from "./pages/Import";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
