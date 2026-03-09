@@ -560,6 +560,10 @@ export type Database = {
           date: string
           description: string
           id: string
+          installment_count: number | null
+          installment_group_id: string | null
+          installment_number: number | null
+          is_installment: boolean
           is_recurring: boolean
           notes: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
@@ -576,6 +580,10 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          installment_count?: number | null
+          installment_group_id?: string | null
+          installment_number?: number | null
+          is_installment?: boolean
           is_recurring?: boolean
           notes?: string | null
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
@@ -592,6 +600,10 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          installment_count?: number | null
+          installment_group_id?: string | null
+          installment_number?: number | null
+          is_installment?: boolean
           is_recurring?: boolean
           notes?: string | null
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
