@@ -261,6 +261,11 @@ export default function Dashboard() {
           </motion.div>
         )}
 
+        {/* Installments Tracker */}
+        <motion.div variants={itemVariants}>
+          <InstallmentsTracker />
+        </motion.div>
+
         {/* Charts */}
         <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
           <MonthlyChart transactions={allTransactions} isLoading={isLoadingTransactions} />
