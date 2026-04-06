@@ -32,6 +32,7 @@ import {
   Shield,
   Sun,
   Moon,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';

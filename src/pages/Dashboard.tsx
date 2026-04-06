@@ -309,6 +309,9 @@ export default function Dashboard() {
           onNewExpense={() => handleOpenForm('expense')}
           onTransfer={() => setIsTransferOpen(true)}
         />
+
+        {/* Tutorial */}
+        <TutorialDialog isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
       </motion.div>
     </AppLayout>
   );
