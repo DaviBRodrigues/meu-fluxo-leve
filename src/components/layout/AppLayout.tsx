@@ -37,6 +37,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useLayoutTheme } from '@/contexts/LayoutThemeContext';
+import TutorialDialog from '@/components/tutorial/TutorialDialog';
 
 const baseNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
