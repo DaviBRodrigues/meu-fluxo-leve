@@ -375,5 +375,6 @@ export function useTransactions(filters?: TransactionFilters) {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    deleteInstallmentGroup,
   };
 }
