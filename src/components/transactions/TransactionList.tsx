@@ -103,7 +103,21 @@ export default function TransactionList({
     if (transactionToDelete && onDelete) {
       onDelete(transactionToDelete);
       setTransactionToDelete(null);
+      setShowGroupDeleteOption(false);
     }
+  };
+
+  const handleConfirmDeleteGroup = () => {
+    if (transactionToDelete && onDeleteGroup && (transactionToDelete as any).installment_group_id) {
+      onDeleteGroup((transactionToDelete as any).installment_group_id);
+      setTransactionToDelete(null);
+      setShowGroupDeleteOption(false);
+    }
+  };
+
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setShowGroupDeleteOption(!!(transaction as any).is_installment && !!(transaction as any).installment_group_id);
   };
 
   const itemVariants = {
