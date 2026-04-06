@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Transaction } from '@/types/database';
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format';
-import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt, RefreshCw } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt, RefreshCw, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import TransactionFilters, { FilterPeriod } from './TransactionFilters';
 import EmptyState from '@/components/shared/EmptyState';
