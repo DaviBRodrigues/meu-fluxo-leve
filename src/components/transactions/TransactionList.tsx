@@ -39,6 +39,7 @@ export default function TransactionList({
   transactions,
   isLoading,
   onDelete,
+  onDeleteGroup,
   onEdit,
   showFilters = true,
   isDeleting = false,
@@ -46,6 +47,7 @@ export default function TransactionList({
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState<FilterPeriod>('all');
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [showGroupDeleteOption, setShowGroupDeleteOption] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
