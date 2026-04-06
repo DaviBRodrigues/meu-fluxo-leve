@@ -214,7 +214,8 @@ export default function Expenses() {
           transactions={transactions}
           isLoading={isLoading}
           onDelete={(transaction) => deleteTransaction.mutate(transaction)}
-          isDeleting={deleteTransaction.isPending}
+          onDeleteGroup={(groupId) => deleteInstallmentGroup.mutate(groupId)}
+          isDeleting={deleteTransaction.isPending || deleteInstallmentGroup.isPending}
         />
 
         {/* Form */}
