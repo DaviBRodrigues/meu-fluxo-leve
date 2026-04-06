@@ -205,6 +205,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsTutorialOpen(true)}>
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Ver Tutorial
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
                 <Settings className="w-4 h-4 mr-2" />
                 Configurações
