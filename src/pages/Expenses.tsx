@@ -27,7 +27,7 @@ export default function Expenses() {
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
 
-  const { transactions, totalExpenses, isLoading, createTransaction, deleteTransaction } = useTransactions({
+  const { transactions, totalExpenses, isLoading, createTransaction, deleteTransaction, deleteInstallmentGroup } = useTransactions({
     month,
     year,
     type: 'expense',
