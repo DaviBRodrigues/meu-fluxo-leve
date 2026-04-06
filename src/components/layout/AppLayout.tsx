@@ -223,6 +223,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main style={{ paddingLeft: undefined }} className="lg:pl-[var(--sidebar-width)]">
         <div className="p-[var(--container-padding)] lg:p-[var(--container-padding-lg)]">{children}</div>
       </main>
+
+      <TutorialDialog isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
     </div>
   );
 }
