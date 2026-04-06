@@ -127,6 +127,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <NavLinks />
         </nav>
         <div className="p-4 border-t border-border space-y-2">
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setIsTutorialOpen(true)}>
+            <HelpCircle className="w-4 h-4" />
+            <span className="text-sm">Ver Tutorial</span>
+          </Button>
           <Button variant="ghost" className="w-full justify-start gap-3" onClick={toggleTheme}>
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             <span className="text-sm">{theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}</span>
