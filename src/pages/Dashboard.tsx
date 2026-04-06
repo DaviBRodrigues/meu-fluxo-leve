@@ -59,6 +59,14 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('expense');
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Show tutorial on first visit
+  useEffect(() => {
+    if (!localStorage.getItem('tutorial-completed')) {
+      setIsTutorialOpen(true);
+    }
+  }, []);
 
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
