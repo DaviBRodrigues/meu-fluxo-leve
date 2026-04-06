@@ -269,16 +269,57 @@ export default function TransactionList({
         </CardContent>
       </Card>
 
-      <DeleteConfirmDialog
-        isOpen={!!transactionToDelete}
-        onClose={() => setTransactionToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar exclusão"
-        description="Tem certeza que deseja remover esta transação?"
-        itemName={transactionToDelete?.description}
-        affectsBalance={true}
-        isLoading={isDeleting}
-      />
+      {showGroupDeleteOption && transactionToDelete ? (
+        <AlertDialog open={!!transactionToDelete} onOpenChange={() => { setTransactionToDelete(null); setShowGroupDeleteOption(false); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Excluir parcela ou parcelamento?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta transação faz parte de um parcelamento. O que deseja fazer?
+                <span className="block mt-2 font-medium text-foreground">
+                  "{transactionToDelete.description}"
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                Excluir apenas esta parcela
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDeleteGroup}
+                disabled={isDeleting}
+              >
+                Excluir todas as parcelas
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { setTransactionToDelete(null); setShowGroupDeleteOption(false); }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : (
+        <DeleteConfirmDialog
+          isOpen={!!transactionToDelete}
+          onClose={() => setTransactionToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          title="Confirmar exclusão"
+          description="Tem certeza que deseja remover esta transação?"
+          itemName={transactionToDelete?.description}
+          affectsBalance={true}
+          isLoading={isDeleting}
+        />
+      )}
     </>
   );
 }
