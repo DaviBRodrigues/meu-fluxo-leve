@@ -32,10 +32,12 @@ import {
   Shield,
   Sun,
   Moon,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useLayoutTheme } from '@/contexts/LayoutThemeContext';
+import TutorialDialog from '@/components/tutorial/TutorialDialog';
 
 const baseNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -57,6 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const { dueReminders } = useRecurringReminders();
   const { config } = useLayoutTheme();
 
@@ -124,6 +127,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <NavLinks />
         </nav>
         <div className="p-4 border-t border-border space-y-2">
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setIsTutorialOpen(true)}>
+            <HelpCircle className="w-4 h-4" />
+            <span className="text-sm">Ver Tutorial</span>
+          </Button>
           <Button variant="ghost" className="w-full justify-start gap-3" onClick={toggleTheme}>
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             <span className="text-sm">{theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}</span>
@@ -198,6 +205,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsTutorialOpen(true)}>
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Ver Tutorial
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
                 <Settings className="w-4 h-4 mr-2" />
                 Configurações
@@ -216,6 +227,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main style={{ paddingLeft: undefined }} className="lg:pl-[var(--sidebar-width)]">
         <div className="p-[var(--container-padding)] lg:p-[var(--container-padding-lg)]">{children}</div>
       </main>
+
+      <TutorialDialog isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
     </div>
   );
 }

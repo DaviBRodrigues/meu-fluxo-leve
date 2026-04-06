@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,7 @@ import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
 import InstallmentsTracker from '@/components/dashboard/InstallmentsTracker';
+import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransferForm from '@/components/transactions/TransferForm';
@@ -58,6 +59,14 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('expense');
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Show tutorial on first visit
+  useEffect(() => {
+    if (!localStorage.getItem('tutorial-completed')) {
+      setIsTutorialOpen(true);
+    }
+  }, []);
 
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
@@ -300,6 +309,9 @@ export default function Dashboard() {
           onNewExpense={() => handleOpenForm('expense')}
           onTransfer={() => setIsTransferOpen(true)}
         />
+
+        {/* Tutorial */}
+        <TutorialDialog isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
       </motion.div>
     </AppLayout>
   );
