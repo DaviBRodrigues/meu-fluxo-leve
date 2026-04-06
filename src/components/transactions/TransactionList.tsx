@@ -16,6 +16,7 @@ interface TransactionListProps {
   transactions: Transaction[];
   isLoading?: boolean;
   onDelete?: (transaction: Transaction) => void;
+  onDeleteGroup?: (groupId: string) => void;
   onEdit?: (transaction: Transaction) => void;
   showFilters?: boolean;
   isDeleting?: boolean;
