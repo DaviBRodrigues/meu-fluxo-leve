@@ -27,7 +27,7 @@ export default function Expenses() {
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
 
-  const { transactions, totalExpenses, isLoading, createTransaction, deleteTransaction } = useTransactions({
+  const { transactions, totalExpenses, isLoading, createTransaction, deleteTransaction, deleteInstallmentGroup } = useTransactions({
     month,
     year,
     type: 'expense',
@@ -214,7 +214,8 @@ export default function Expenses() {
           transactions={transactions}
           isLoading={isLoading}
           onDelete={(transaction) => deleteTransaction.mutate(transaction)}
-          isDeleting={deleteTransaction.isPending}
+          onDeleteGroup={(groupId) => deleteInstallmentGroup.mutate(groupId)}
+          isDeleting={deleteTransaction.isPending || deleteInstallmentGroup.isPending}
         />
 
         {/* Form */}

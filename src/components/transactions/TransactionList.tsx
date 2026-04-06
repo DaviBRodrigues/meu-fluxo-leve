@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { Transaction } from '@/types/database';
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format';
-import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt, RefreshCw } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Trash2, Edit, Receipt, RefreshCw, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import TransactionFilters, { FilterPeriod } from './TransactionFilters';
 import EmptyState from '@/components/shared/EmptyState';
@@ -16,6 +23,7 @@ interface TransactionListProps {
   transactions: Transaction[];
   isLoading?: boolean;
   onDelete?: (transaction: Transaction) => void;
+  onDeleteGroup?: (groupId: string) => void;
   onEdit?: (transaction: Transaction) => void;
   showFilters?: boolean;
   isDeleting?: boolean;
@@ -38,6 +46,7 @@ export default function TransactionList({
   transactions,
   isLoading,
   onDelete,
+  onDeleteGroup,
   onEdit,
   showFilters = true,
   isDeleting = false,
@@ -45,6 +54,7 @@ export default function TransactionList({
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState<FilterPeriod>('all');
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [showGroupDeleteOption, setShowGroupDeleteOption] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
@@ -100,7 +110,21 @@ export default function TransactionList({
     if (transactionToDelete && onDelete) {
       onDelete(transactionToDelete);
       setTransactionToDelete(null);
+      setShowGroupDeleteOption(false);
     }
+  };
+
+  const handleConfirmDeleteGroup = () => {
+    if (transactionToDelete && onDeleteGroup && (transactionToDelete as any).installment_group_id) {
+      onDeleteGroup((transactionToDelete as any).installment_group_id);
+      setTransactionToDelete(null);
+      setShowGroupDeleteOption(false);
+    }
+  };
+
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setShowGroupDeleteOption(!!(transaction as any).is_installment && !!(transaction as any).installment_group_id);
   };
 
   const itemVariants = {
@@ -235,7 +259,7 @@ export default function TransactionList({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => setTransactionToDelete(transaction)}
+                                onClick={() => handleDeleteClick(transaction)}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -252,16 +276,57 @@ export default function TransactionList({
         </CardContent>
       </Card>
 
-      <DeleteConfirmDialog
-        isOpen={!!transactionToDelete}
-        onClose={() => setTransactionToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar exclusão"
-        description="Tem certeza que deseja remover esta transação?"
-        itemName={transactionToDelete?.description}
-        affectsBalance={true}
-        isLoading={isDeleting}
-      />
+      {showGroupDeleteOption && transactionToDelete ? (
+        <AlertDialog open={!!transactionToDelete} onOpenChange={() => { setTransactionToDelete(null); setShowGroupDeleteOption(false); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Excluir parcela ou parcelamento?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta transação faz parte de um parcelamento. O que deseja fazer?
+                <span className="block mt-2 font-medium text-foreground">
+                  "{transactionToDelete.description}"
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                Excluir apenas esta parcela
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDeleteGroup}
+                disabled={isDeleting}
+              >
+                Excluir todas as parcelas
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { setTransactionToDelete(null); setShowGroupDeleteOption(false); }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : (
+        <DeleteConfirmDialog
+          isOpen={!!transactionToDelete}
+          onClose={() => setTransactionToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          title="Confirmar exclusão"
+          description="Tem certeza que deseja remover esta transação?"
+          itemName={transactionToDelete?.description}
+          affectsBalance={true}
+          isLoading={isDeleting}
+        />
+      )}
     </>
   );
 }

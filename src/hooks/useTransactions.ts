@@ -279,6 +279,76 @@ export function useTransactions(filters?: TransactionFilters) {
     },
   });
 
+  const deleteInstallmentGroup = useMutation({
+    mutationFn: async (groupId: string) => {
+      // Get all installments in the group
+      const { data: installments, error: fetchError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('installment_group_id', groupId)
+        .eq('user_id', user!.id);
+
+      if (fetchError) throw fetchError;
+      if (!installments || installments.length === 0) return;
+
+      // Log activity
+      const firstInstallment = installments[0];
+      const baseDesc = firstInstallment.description.replace(/\s*\(\d+\/\d+\)$/, '');
+      await logActivity.mutateAsync({
+        action_type: 'delete',
+        entity_type: 'transaction',
+        entity_id: groupId,
+        entity_description: `Parcelamento: ${baseDesc} (${installments.length} parcelas)`,
+        original_data: JSON.parse(JSON.stringify(installments)) as Json,
+        amount: installments.reduce((sum, t) => sum + Number(t.amount), 0),
+      });
+
+      // Delete all installments
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('installment_group_id', groupId)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+
+      // Revert balance only for past installments (already counted)
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const paidInstallments = installments.filter(t => t.date <= today);
+      
+      // Group by account_id to batch balance updates
+      const accountAdjustments = new Map<string, number>();
+      for (const t of paidInstallments) {
+        const adjust = t.type === 'income' ? -Number(t.amount) : Number(t.amount);
+        accountAdjustments.set(t.account_id, (accountAdjustments.get(t.account_id) || 0) + adjust);
+      }
+
+      for (const [accountId, adjustment] of accountAdjustments) {
+        const { data: account } = await supabase
+          .from('accounts')
+          .select('balance')
+          .eq('id', accountId)
+          .single();
+        if (account) {
+          await supabase
+            .from('accounts')
+            .update({ balance: Number(account.balance) + adjustment })
+            .eq('id', accountId);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['installment-groups'] });
+      toast.success('Parcelamento removido com sucesso!');
+    },
+    onError: () => {
+      toast.error('Erro ao remover parcelamento');
+    },
+  });
+
   const isTransfer = (t: Transaction) => t.description?.startsWith('[Transferência]');
 
   const totalIncome = transactions
@@ -305,5 +375,6 @@ export function useTransactions(filters?: TransactionFilters) {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    deleteInstallmentGroup,
   };
 }
