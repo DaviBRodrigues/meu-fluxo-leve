@@ -56,7 +56,11 @@ interface TransactionFormProps {
 }
 
 export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoading }: TransactionFormProps) {
-  const { categories } = useCategories(type);
+  const { categories, getSubcategories } = useCategories(type);
+  const parentCategories = categories.filter(c => !c.parent_id);
+  const { accounts } = useAccounts();
+  const [date, setDate] = useState<Date>(new Date());
+  const [selectedParentId, setSelectedParentId] = useState<string>('');
   const { accounts } = useAccounts();
   const [date, setDate] = useState<Date>(new Date());
 
@@ -114,8 +118,11 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
   const handleClose = () => {
     reset();
     setDate(new Date());
+    setSelectedParentId('');
     onClose();
   };
+
+  const subcategories = selectedParentId ? getSubcategories(selectedParentId) : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -188,12 +195,21 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
 
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select onValueChange={(v) => setValue('category_id', v)}>
+              <Select onValueChange={(v) => {
+                setSelectedParentId(v);
+                // If this category has no subcategories, set it directly
+                const subs = getSubcategories(v);
+                if (subs.length === 0) {
+                  setValue('category_id', v);
+                } else {
+                  setValue('category_id', '');
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {parentCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center gap-2">
                         <div
@@ -210,6 +226,32 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
                 <p className="text-sm text-destructive">{errors.category_id.message}</p>
               )}
             </div>
+          </div>
+
+          {/* Subcategory selector */}
+          {subcategories.length > 0 && (
+            <div className="space-y-2">
+              <Label>Subcategoria</Label>
+              <Select onValueChange={(v) => setValue('category_id', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a subcategoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subcategories.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: sub.color }}
+                        />
+                        {sub.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           </div>
 
           <div className="space-y-2">
