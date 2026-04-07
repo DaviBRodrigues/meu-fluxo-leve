@@ -267,7 +267,10 @@ export default function Dashboard() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {formatCurrency(Number(goal.current_amount))} / {formatCurrency(Number(goal.target_amount))}
+                          {isPrivate
+                            ? 'R$ ••••• / R$ •••••'
+                            : `${formatCurrency(Number(goal.current_amount))} / ${formatCurrency(Number(goal.target_amount))}`
+                          }
                         </p>
                       </motion.div>
                     );
