@@ -3,6 +3,7 @@ import CountUp from 'react-countup';
 import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 
 interface AnimatedStatCardProps {
   title: string;
@@ -30,6 +31,7 @@ export default function AnimatedStatCard({
 }: AnimatedStatCardProps) {
   const [prevValue, setPrevValue] = useState(0);
   const [currentValue, setCurrentValue] = useState(value);
+  const { isPrivate } = usePrivacy();
 
   useEffect(() => {
     setPrevValue(currentValue);
@@ -57,18 +59,22 @@ export default function AnimatedStatCard({
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold tracking-tight">
-              <CountUp
-                start={prevValue}
-                end={currentValue}
-                duration={1}
-                decimals={decimals}
-                decimal=","
-                separator="."
-                prefix={prefix}
-                suffix={suffix}
-              />
+              {isPrivate ? (
+                <span className="text-muted-foreground">R$ •••••</span>
+              ) : (
+                <CountUp
+                  start={prevValue}
+                  end={currentValue}
+                  duration={1}
+                  decimals={decimals}
+                  decimal=","
+                  separator="."
+                  prefix={prefix}
+                  suffix={suffix}
+                />
+              )}
             </p>
-            {trend && (
+            {trend && !isPrivate && (
               <p
                 className={cn(
                   'text-sm font-medium',

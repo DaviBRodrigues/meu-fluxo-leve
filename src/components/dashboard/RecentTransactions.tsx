@@ -4,6 +4,7 @@ import { Transaction } from '@/types/database';
 import { formatCurrency, formatShortDate } from '@/lib/format';
 import { ArrowUpCircle, ArrowDownCircle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 import { Link } from 'react-router-dom';
 
 interface RecentTransactionsProps {
@@ -13,6 +14,7 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions, isLoading }: RecentTransactionsProps) {
   const recentTransactions = transactions.slice(0, 5);
+  const { isPrivate } = usePrivacy();
 
   return (
     <Card>
@@ -74,7 +76,7 @@ export default function RecentTransactions({ transactions, isLoading }: RecentTr
                     transaction.type === 'income' ? 'text-income' : 'text-expense'
                   )}
                 >
-                  {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Number(transaction.amount))}
+                  {isPrivate ? 'R$ •••••' : `${transaction.type === 'income' ? '+' : '-'} ${formatCurrency(Number(transaction.amount))}`}
                 </p>
               </div>
             ))}

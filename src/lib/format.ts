@@ -1,7 +1,8 @@
 import { isToday, isYesterday, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number, masked?: boolean): string {
+  if (masked) return 'R$ •••••';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',

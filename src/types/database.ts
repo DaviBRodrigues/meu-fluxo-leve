@@ -31,6 +31,7 @@ export interface Category {
   color: string;
   icon: string | null;
   is_default: boolean;
+  parent_id: string | null;
   created_at: string;
 }
 

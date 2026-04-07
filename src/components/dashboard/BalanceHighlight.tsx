@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/format';
 import CountUp from 'react-countup';
 import { cn } from '@/lib/utils';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 
 interface BalanceHighlightProps {
   balance: number;
@@ -11,6 +12,8 @@ interface BalanceHighlightProps {
 }
 
 export function BalanceHighlight({ balance, isLoading }: BalanceHighlightProps) {
+  const { isPrivate } = usePrivacy();
+
   return (
     <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
       <CardContent className="p-6 sm:p-8">
@@ -24,6 +27,10 @@ export function BalanceHighlight({ balance, isLoading }: BalanceHighlightProps) 
             >
               {isLoading ? (
                 <div className="h-12 w-48 bg-muted animate-pulse rounded-lg" />
+              ) : isPrivate ? (
+                <p className="text-4xl sm:text-5xl font-bold tracking-tight text-muted-foreground">
+                  R$ •••••
+                </p>
               ) : (
                 <p className={cn(
                   'text-4xl sm:text-5xl font-bold tracking-tight',
@@ -42,7 +49,7 @@ export function BalanceHighlight({ balance, isLoading }: BalanceHighlightProps) 
               )}
             </motion.div>
             <p className="text-xs text-muted-foreground mt-2">
-              {balance >= 0 ? 'Suas finanças estão em dia!' : 'Atenção: saldo negativo'}
+              {isPrivate ? 'Valores ocultos' : balance >= 0 ? 'Suas finanças estão em dia!' : 'Atenção: saldo negativo'}
             </p>
           </div>
           <motion.div

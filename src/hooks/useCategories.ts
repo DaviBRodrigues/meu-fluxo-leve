@@ -51,11 +51,15 @@ export function useCategories(type?: TransactionType) {
 
   const incomeCategories = categories.filter(c => c.type === 'income');
   const expenseCategories = categories.filter(c => c.type === 'expense');
+  const parentCategories = categories.filter(c => !c.parent_id);
+  const getSubcategories = (parentId: string) => categories.filter(c => c.parent_id === parentId);
 
   return {
     categories,
     incomeCategories,
     expenseCategories,
+    parentCategories,
+    getSubcategories,
     isLoading,
     createCategory,
   };

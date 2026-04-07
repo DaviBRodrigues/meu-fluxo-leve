@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 import { LayoutThemeProvider } from "@/contexts/LayoutThemeContext";
+import { PrivacyProvider } from "@/contexts/PrivacyContext";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Deactivated from "./pages/Deactivated";
@@ -150,7 +151,9 @@ function ThemedApp() {
   useTheme(); // Applies theme class to document
   return (
     <LayoutThemeProvider>
-      <AppRoutes />
+      <PrivacyProvider>
+        <AppRoutes />
+      </PrivacyProvider>
     </LayoutThemeProvider>
   );
 }

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { SavingsGoal } from '@/types/database';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { Target, Plus, Trash2, MoreVertical, Check } from 'lucide-react';
+import { Target, Plus, Trash2, MoreVertical, Check, Clock } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { usePrivacy } from '@/contexts/PrivacyContext';
+import { useTransactions } from '@/hooks/useTransactions';
 
 interface GoalCardProps {
   goal: SavingsGoal;
@@ -24,9 +26,28 @@ interface GoalCardProps {
 export default function GoalCard({ goal, onAddAmount, onDelete }: GoalCardProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [addAmount, setAddAmount] = useState('');
+  const { isPrivate } = usePrivacy();
+
+  // Get last 3 months of income/expense to estimate savings rate
+  const now = new Date();
+  const { totalIncome: inc1, totalExpenses: exp1 } = useTransactions({ month: now.getMonth() + 1, year: now.getFullYear() });
+  const prev1 = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const { totalIncome: inc2, totalExpenses: exp2 } = useTransactions({ month: prev1.getMonth() + 1, year: prev1.getFullYear() });
+  const prev2 = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  const { totalIncome: inc3, totalExpenses: exp3 } = useTransactions({ month: prev2.getMonth() + 1, year: prev2.getFullYear() });
+
+  const avgMonthlySavings = ((inc1 - exp1) + (inc2 - exp2) + (inc3 - exp3)) / 3;
 
   const progress = Math.min((Number(goal.current_amount) / Number(goal.target_amount)) * 100, 100);
   const remaining = Number(goal.target_amount) - Number(goal.current_amount);
+
+  // Estimated completion
+  let estimatedDate: string | null = null;
+  if (!goal.is_completed && remaining > 0 && avgMonthlySavings > 0) {
+    const monthsNeeded = Math.ceil(remaining / avgMonthlySavings);
+    const est = new Date(now.getFullYear(), now.getMonth() + monthsNeeded, 1);
+    estimatedDate = formatDate(est);
+  }
 
   const handleAddAmount = () => {
     const amount = parseFloat(addAmount.replace(/\./g, '').replace(',', '.'));
@@ -100,18 +121,26 @@ export default function GoalCard({ goal, onAddAmount, onDelete }: GoalCardProps)
               <div>
                 <p className="text-sm text-muted-foreground">Guardado</p>
                 <p className="font-semibold text-income">
-                  {formatCurrency(Number(goal.current_amount))}
+                  {isPrivate ? 'R$ •••••' : formatCurrency(Number(goal.current_amount))}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Meta</p>
-                <p className="font-semibold">{formatCurrency(Number(goal.target_amount))}</p>
+                <p className="font-semibold">
+                  {isPrivate ? 'R$ •••••' : formatCurrency(Number(goal.target_amount))}
+                </p>
               </div>
             </div>
-            {!goal.is_completed && remaining > 0 && (
+            {!goal.is_completed && remaining > 0 && !isPrivate && (
               <p className="text-sm text-muted-foreground text-center">
                 Faltam {formatCurrency(remaining)}
               </p>
+            )}
+            {estimatedDate && !isPrivate && (
+              <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>Previsão: {estimatedDate}</span>
+              </div>
             )}
           </div>
 
