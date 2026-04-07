@@ -253,8 +253,6 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
             </div>
           )}
 
-          </div>
-
           <div className="space-y-2">
             <Label>Conta</Label>
             <Select onValueChange={(v) => setValue('account_id', v)}>
