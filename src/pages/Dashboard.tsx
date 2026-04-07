@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 import AppLayout from '@/components/layout/AppLayout';
 import AnimatedStatCard from '@/components/dashboard/AnimatedStatCard';
 import { BalanceHighlight } from '@/components/dashboard/BalanceHighlight';
@@ -12,6 +13,7 @@ import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
 import InstallmentsTracker from '@/components/dashboard/InstallmentsTracker';
+import BadgesSection from '@/components/dashboard/BadgesSection';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
@@ -19,6 +21,7 @@ import TransferForm from '@/components/transactions/TransferForm';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useSavingsGoals } from '@/hooks/useSavingsGoals';
@@ -34,6 +37,8 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { TransactionType } from '@/types/database';
 
@@ -54,6 +59,7 @@ const itemVariants = {
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
+  const { isPrivate, togglePrivacy } = usePrivacy();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -143,6 +149,16 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={togglePrivacy} className="h-9 w-9">
+                {isPrivate ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isPrivate ? 'Mostrar valores' : 'Ocultar valores'}
+            </TooltipContent>
+          </Tooltip>
         </motion.div>
 
         {/* Balance Highlight - Full Width */}
