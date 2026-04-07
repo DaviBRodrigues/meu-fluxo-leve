@@ -300,6 +300,11 @@ export default function Dashboard() {
           <ExpensesByCategory transactions={transactions} isLoading={isLoadingTransactions} />
         </motion.div>
 
+        {/* Badges / Conquistas */}
+        <motion.div variants={itemVariants}>
+          <BadgesSection />
+        </motion.div>
+
         {/* Recent Transactions */}
         <motion.div variants={itemVariants}>
           <RecentTransactions transactions={transactions} isLoading={isLoadingTransactions} />
