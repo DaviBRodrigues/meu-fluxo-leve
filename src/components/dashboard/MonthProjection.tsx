@@ -8,6 +8,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency } from '@/lib/format';
 import { TrendingUp, TrendingDown, AlertCircle, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePrivacy } from '@/contexts/PrivacyContext';
 
 interface MonthProjectionProps {
   month: number;
@@ -19,6 +20,15 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
   const { dueReminders } = useRecurringReminders();
   const { totalBalance } = useAccounts();
   const [customDailySpend, setCustomDailySpend] = useState<string>('');
+  const { isPrivate } = usePrivacy();
+
+  // Also get previous 2 months for better average
+  const prev1Month = month === 1 ? 12 : month - 1;
+  const prev1Year = month === 1 ? year - 1 : year;
+  const prev2Month = prev1Month === 1 ? 12 : prev1Month - 1;
+  const prev2Year = prev1Month === 1 ? prev1Year - 1 : prev1Year;
+  const { totalExpenses: prevExp1 } = useTransactions({ month: prev1Month, year: prev1Year });
+  const { totalExpenses: prevExp2 } = useTransactions({ month: prev2Month, year: prev2Year });
 
   // Calculate days elapsed and remaining in month (using local date)
   const now = new Date();
@@ -104,7 +114,7 @@ export default function MonthProjection({ month, year }: MonthProjectionProps) {
                   'text-2xl font-bold',
                   isPositive ? 'text-income' : 'text-destructive'
                 )}>
-                  {formatCurrency(projectedBalance)}
+                  {isPrivate ? 'R$ •••••' : formatCurrency(projectedBalance)}
                 </p>
               </div>
               {isPositive ? (
