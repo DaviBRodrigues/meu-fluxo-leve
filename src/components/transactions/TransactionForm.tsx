@@ -252,6 +252,7 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
               </Select>
             </div>
           )}
+
           </div>
 
           <div className="space-y-2">
