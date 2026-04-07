@@ -61,8 +61,6 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
   const { accounts } = useAccounts();
   const [date, setDate] = useState<Date>(new Date());
   const [selectedParentId, setSelectedParentId] = useState<string>('');
-  const { accounts } = useAccounts();
-  const [date, setDate] = useState<Date>(new Date());
 
   const {
     register,
