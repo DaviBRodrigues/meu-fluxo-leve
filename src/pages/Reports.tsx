@@ -356,8 +356,6 @@ export default function Reports() {
             </div>
           </CardContent>
         </Card>
-        {/* Export */}
-        <DataExport />
       </div>
     </AppLayout>
   );
