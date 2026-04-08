@@ -44,6 +44,7 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
   const { user } = useAuth();
   const { accounts } = useAccounts();
   const { categories } = useCategories(type);
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('upload');
