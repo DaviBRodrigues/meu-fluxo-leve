@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransactionList from '@/components/transactions/TransactionList';
+import ImportTransactions from '@/components/import/ImportTransactions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,13 +14,14 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
 import { useBudgets } from '@/hooks/useBudgets';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { ArrowDownCircle, Plus, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { ArrowDownCircle, Plus, ChevronLeft, ChevronRight, AlertTriangle, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Expenses() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
@@ -99,10 +101,16 @@ export default function Expenses() {
               </Button>
             </div>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Despesa
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar CSV
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Despesa
+            </Button>
+          </div>
         </div>
 
         {/* Summary */}
@@ -225,6 +233,15 @@ export default function Expenses() {
           onClose={() => setIsFormOpen(false)}
           onSubmit={(data) => createTransaction.mutate(data)}
           isLoading={createTransaction.isPending}
+        />
+
+        <ImportTransactions
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          type="expense"
+          onSuccess={() => {
+            // queries will be invalidated by react-query
+          }}
         />
       </div>
     </AppLayout>
