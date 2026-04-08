@@ -4,18 +4,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransactionList from '@/components/transactions/TransactionList';
+import ImportTransactions from '@/components/import/ImportTransactions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { ArrowUpCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowUpCircle, Plus, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 
 export default function Income() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>();
 
@@ -67,10 +69,16 @@ export default function Income() {
               </Button>
             </div>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Receita
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar CSV
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Receita
+            </Button>
+          </div>
         </div>
 
         {/* Summary */}
@@ -129,6 +137,13 @@ export default function Income() {
           onClose={() => setIsFormOpen(false)}
           onSubmit={(data) => createTransaction.mutate(data)}
           isLoading={createTransaction.isPending}
+        />
+
+        <ImportTransactions
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          type="income"
+          onSuccess={() => {}}
         />
       </div>
     </AppLayout>
