@@ -9,7 +9,6 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
 import { BarChart3, TrendingUp, TrendingDown, Wallet, Landmark } from 'lucide-react';
-import DataExport from '@/components/export/DataExport';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 
 export default function Reports() {
@@ -357,8 +356,6 @@ export default function Reports() {
             </div>
           </CardContent>
         </Card>
-        {/* Export */}
-        <DataExport />
       </div>
     </AppLayout>
   );
