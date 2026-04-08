@@ -281,6 +281,8 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
       }
 
       toast.success(`${selectedRows.length} transações importadas com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
       onSuccess();
       handleClose();
     } catch (err) {
