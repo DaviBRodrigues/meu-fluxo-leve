@@ -222,6 +222,9 @@ export default function Reports() {
           </Card>
         </div>
 
+        {/* Smart Analysis */}
+        <SmartAnalysis financialData={smartFinancialData} />
+
         {/* Monthly Comparison Chart */}
         <Card>
           <CardHeader>
