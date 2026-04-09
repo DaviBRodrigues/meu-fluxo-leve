@@ -9,6 +9,9 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
 import { BarChart3, TrendingUp, TrendingDown, Wallet, Landmark } from 'lucide-react';
+import SmartAnalysis from '@/components/reports/SmartAnalysis';
+import { useBudgets } from '@/hooks/useBudgets';
+import { useSavingsGoals } from '@/hooks/useSavingsGoals';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 
 export default function Reports() {
@@ -18,6 +21,8 @@ export default function Reports() {
 
   const { transactions, isLoading } = useTransactions();
   const { totalBalance } = useAccounts();
+  const { budgets } = useBudgets(undefined, undefined);
+  const { goals } = useSavingsGoals();
 
   if (loading) return null;
   if (!user) {
@@ -87,6 +92,28 @@ export default function Reports() {
       color: data.color,
     }))
     .sort((a, b) => b.value - a.value);
+
+  const smartFinancialData = {
+    year: selectedYear,
+    totalBalance,
+    yearIncome,
+    yearExpenses,
+    monthlyData: monthlyData.map((m) => ({ month: m.fullMonth, income: m.Receitas, expenses: m.Despesas })),
+    categoryBreakdown: categoryData.map((c) => ({ name: c.name, value: c.value })),
+    budgets: budgets.map((b: any) => ({
+      category: b.category?.name || 'Sem nome',
+      budgeted: Number(b.amount),
+      spent: yearTransactions
+        .filter((t) => t.type === 'expense' && t.category_id === b.category_id)
+        .reduce((s, t) => s + Number(t.amount), 0),
+    })),
+    goals: goals.map((g) => ({
+      name: g.name,
+      target: Number(g.target_amount),
+      current: Number(g.current_amount),
+      completed: g.is_completed,
+    })),
+  };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -194,6 +221,9 @@ export default function Reports() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Smart Analysis */}
+        <SmartAnalysis financialData={smartFinancialData} />
 
         {/* Monthly Comparison Chart */}
         <Card>
