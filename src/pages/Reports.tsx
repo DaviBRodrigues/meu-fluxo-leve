@@ -21,6 +21,8 @@ export default function Reports() {
 
   const { transactions, isLoading } = useTransactions();
   const { totalBalance } = useAccounts();
+  const { budgets } = useBudgets(undefined, undefined);
+  const { goals } = useSavingsGoals();
 
   if (loading) return null;
   if (!user) {
