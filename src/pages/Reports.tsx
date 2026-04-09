@@ -9,6 +9,9 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
 import { BarChart3, TrendingUp, TrendingDown, Wallet, Landmark } from 'lucide-react';
+import SmartAnalysis from '@/components/reports/SmartAnalysis';
+import { useBudgets } from '@/hooks/useBudgets';
+import { useSavingsGoals } from '@/hooks/useSavingsGoals';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 
 export default function Reports() {
