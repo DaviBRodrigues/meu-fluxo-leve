@@ -14,6 +14,7 @@ import BudgetProgress from '@/components/dashboard/BudgetProgress';
 import MonthProjection from '@/components/dashboard/MonthProjection';
 import InstallmentsTracker from '@/components/dashboard/InstallmentsTracker';
 import BadgesSection from '@/components/dashboard/BadgesSection';
+import DashboardInsights from '@/components/dashboard/DashboardInsights';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import TransactionForm from '@/components/transactions/TransactionForm';
@@ -229,6 +230,17 @@ export default function Dashboard() {
         <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
           <MonthProjection month={month} year={year} />
           <BudgetProgress month={month} year={year} />
+        </motion.div>
+
+        {/* AI Insights */}
+        <motion.div variants={itemVariants}>
+          <DashboardInsights
+            totalBalance={totalBalance}
+            monthIncome={totalIncome}
+            monthExpenses={totalExpenses}
+            month={month}
+            year={year}
+          />
         </motion.div>
 
         {/* Goals Summary */}
