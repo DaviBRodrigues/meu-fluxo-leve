@@ -93,6 +93,28 @@ export default function Reports() {
     }))
     .sort((a, b) => b.value - a.value);
 
+  const smartFinancialData = {
+    year: selectedYear,
+    totalBalance,
+    yearIncome,
+    yearExpenses,
+    monthlyData: monthlyData.map((m) => ({ month: m.fullMonth, income: m.Receitas, expenses: m.Despesas })),
+    categoryBreakdown: categoryData.map((c) => ({ name: c.name, value: c.value })),
+    budgets: budgets.map((b: any) => ({
+      category: b.category?.name || 'Sem nome',
+      budgeted: Number(b.amount),
+      spent: yearTransactions
+        .filter((t) => t.type === 'expense' && t.category_id === b.category_id)
+        .reduce((s, t) => s + Number(t.amount), 0),
+    })),
+    goals: goals.map((g) => ({
+      name: g.name,
+      target: Number(g.target_amount),
+      current: Number(g.current_amount),
+      completed: g.is_completed,
+    })),
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
