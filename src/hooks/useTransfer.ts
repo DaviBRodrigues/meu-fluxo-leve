@@ -76,33 +76,15 @@ export function useTransfer() {
 
       if (incomeError) throw incomeError;
 
-      // Update source account balance (debit)
-      const { data: sourceAccount } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', transfer.from_account_id)
-        .single();
-
-      if (sourceAccount) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(sourceAccount.balance) - transfer.amount })
-          .eq('id', transfer.from_account_id);
-      }
-
-      // Update destination account balance (credit)
-      const { data: destAccount } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', transfer.to_account_id)
-        .single();
-
-      if (destAccount) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(destAccount.balance) + transfer.amount })
-          .eq('id', transfer.to_account_id);
-      }
+      // Update account balances atomically
+      await supabase.rpc('update_account_balance', {
+        p_account_id: transfer.from_account_id,
+        p_amount_change: -transfer.amount,
+      });
+      await supabase.rpc('update_account_balance', {
+        p_account_id: transfer.to_account_id,
+        p_amount_change: transfer.amount,
+      });
 
       return { success: true };
     },
