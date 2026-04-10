@@ -674,6 +674,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      update_account_balance: {
+        Args: { p_account_id: string; p_amount_change: number }
+        Returns: undefined
+      }
       validate_access_code: { Args: { code_input: string }; Returns: boolean }
     }
     Enums: {
