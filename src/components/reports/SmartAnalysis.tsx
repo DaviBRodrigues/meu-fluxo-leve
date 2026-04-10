@@ -77,8 +77,9 @@ export default function SmartAnalysis({ financialData }: SmartAnalysisProps) {
   const analyze = async () => {
     setIsLoading(true);
     try {
+      const userProfile = localStorage.getItem('financial-profile') || '';
       const { data, error } = await supabase.functions.invoke('ai-financial-analysis', {
-        body: { financialData },
+        body: { financialData, userProfile },
       });
 
       if (error) throw error;
