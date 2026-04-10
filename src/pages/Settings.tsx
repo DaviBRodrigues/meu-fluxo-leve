@@ -62,7 +62,6 @@ export default function SettingsPage() {
     localStorage.removeItem('dashboard-insights-cache');
     setTimeout(() => setProfileSaved(false), 2000);
   };
-  const { accounts } = useAccounts();
 
   if (loading) return null;
   if (!user) {
