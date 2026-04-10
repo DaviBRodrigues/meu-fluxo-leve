@@ -134,8 +134,9 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="appearance">Aparência</TabsTrigger>
+            <TabsTrigger value="profile-ai">Perfil IA</TabsTrigger>
             <TabsTrigger value="budgets">Orçamentos</TabsTrigger>
             <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="reminders">Lembretes</TabsTrigger>
