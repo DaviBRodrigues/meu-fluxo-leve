@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { financialData } = await req.json();
+    const { financialData, userProfile } = await req.json();
     if (!financialData) {
       return new Response(JSON.stringify({ error: "financialData is required" }), {
         status: 400,
@@ -25,11 +25,16 @@ serve(async (req) => {
       });
     }
 
+    const profileContext = userProfile
+      ? `\n\nPerfil do usuário (use para personalizar os insights):\n${userProfile}`
+      : '';
+
     const systemPrompt = `Você é um consultor financeiro pessoal brasileiro especializado em análise de finanças domésticas.
 Analise os dados financeiros do usuário e gere insights práticos e personalizados.
 Responda SEMPRE em português do Brasil.
 Seja direto, motivador e prático nas dicas.
-Considere o contexto brasileiro (salário mínimo, custo de vida, etc).`;
+Considere o contexto brasileiro (salário mínimo, custo de vida, etc).
+Se o usuário forneceu um perfil pessoal, use-o para contextualizar suas análises — por exemplo, se ele diz que tem filhos, não alerte sobre gastos com educação; se mora longe do trabalho, considere transporte como essencial.${profileContext}`;
 
     const userPrompt = `Analise estes dados financeiros e gere insights:
 

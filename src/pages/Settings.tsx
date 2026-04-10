@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCategories } from '@/hooks/useCategories';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette } from 'lucide-react';
+import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette, Brain } from 'lucide-react';
 import ThemeSection from '@/components/settings/ThemeSection';
 import { TransactionType } from '@/types/database';
 import { toast } from 'sonner';
@@ -43,6 +44,24 @@ export default function SettingsPage() {
   const { budgets, createBudget, deleteBudget } = useBudgets(new Date().getMonth() + 1, new Date().getFullYear());
   const { reminders, dueReminders } = useRecurringReminders();
   const { accounts } = useAccounts();
+
+  const [financialProfile, setFinancialProfile] = useState('');
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('financial-profile');
+    if (saved) setFinancialProfile(saved);
+  }, []);
+
+  const saveFinancialProfile = () => {
+    localStorage.setItem('financial-profile', financialProfile);
+    setProfileSaved(true);
+    toast.success('Perfil financeiro salvo!');
+    // Limpa cache dos insights para forçar nova análise com o perfil atualizado
+    localStorage.removeItem('smart-analysis-cache');
+    localStorage.removeItem('dashboard-insights-cache');
+    setTimeout(() => setProfileSaved(false), 2000);
+  };
 
   if (loading) return null;
   if (!user) {
@@ -115,8 +134,9 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="appearance">Aparência</TabsTrigger>
+            <TabsTrigger value="profile-ai">Perfil IA</TabsTrigger>
             <TabsTrigger value="budgets">Orçamentos</TabsTrigger>
             <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="reminders">Lembretes</TabsTrigger>
@@ -127,7 +147,45 @@ export default function SettingsPage() {
             <ThemeSection />
           </TabsContent>
 
-          {/* Budgets Tab */}
+          {/* Financial Profile Tab */}
+          <TabsContent value="profile-ai" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  Perfil Financeiro para IA
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Descreva seu estilo de vida, contexto e justificativas para que a IA gere insights mais relevantes e personalizados.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Sobre você e suas finanças</Label>
+                  <Textarea
+                    placeholder="Ex: Sou casado, tenho 2 filhos, moro em São Paulo. Trabalho como CLT e tenho renda extra como freelancer. Gasto bastante com educação dos filhos e transporte. Meu objetivo é juntar para a casa própria em 3 anos..."
+                    value={financialProfile}
+                    onChange={(e) => setFinancialProfile(e.target.value)}
+                    className="min-h-[160px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Dicas: mencione sua cidade, estado civil, dependentes, profissão, objetivos financeiros, gastos que considera essenciais e o que gostaria de economizar.
+                  </p>
+                </div>
+                <Button onClick={saveFinancialProfile} disabled={profileSaved} className="gap-2">
+                  {profileSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Salvo!
+                    </>
+                  ) : (
+                    'Salvar perfil'
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="budgets" className="mt-6 space-y-4">
             <Card>
               <CardHeader>
