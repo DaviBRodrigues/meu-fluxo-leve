@@ -147,7 +147,45 @@ export default function SettingsPage() {
             <ThemeSection />
           </TabsContent>
 
-          {/* Budgets Tab */}
+          {/* Financial Profile Tab */}
+          <TabsContent value="profile-ai" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  Perfil Financeiro para IA
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Descreva seu estilo de vida, contexto e justificativas para que a IA gere insights mais relevantes e personalizados.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Sobre você e suas finanças</Label>
+                  <Textarea
+                    placeholder="Ex: Sou casado, tenho 2 filhos, moro em São Paulo. Trabalho como CLT e tenho renda extra como freelancer. Gasto bastante com educação dos filhos e transporte. Meu objetivo é juntar para a casa própria em 3 anos..."
+                    value={financialProfile}
+                    onChange={(e) => setFinancialProfile(e.target.value)}
+                    className="min-h-[160px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Dicas: mencione sua cidade, estado civil, dependentes, profissão, objetivos financeiros, gastos que considera essenciais e o que gostaria de economizar.
+                  </p>
+                </div>
+                <Button onClick={saveFinancialProfile} disabled={profileSaved} className="gap-2">
+                  {profileSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Salvo!
+                    </>
+                  ) : (
+                    'Salvar perfil'
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="budgets" className="mt-6 space-y-4">
             <Card>
               <CardHeader>
