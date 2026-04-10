@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency } from '@/lib/format';
-import { Wallet, Plus } from 'lucide-react';
+import { Wallet, Plus, RefreshCw } from 'lucide-react';
 import { Account } from '@/types/database';
 
 export default function Accounts() {
@@ -17,7 +17,7 @@ export default function Accounts() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<Account | null>(null);
 
-  const { accounts, totalBalance, isLoading, createAccount, updateAccount, deleteAccount } = useAccounts();
+  const { accounts, totalBalance, isLoading, createAccount, updateAccount, deleteAccount, recalculateBalances } = useAccounts();
 
   if (loading) return null;
   if (!user) {
@@ -56,10 +56,16 @@ export default function Accounts() {
             </h1>
             <p className="text-muted-foreground mt-1">Gerencie suas contas e carteiras</p>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Conta
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => recalculateBalances.mutate()} disabled={recalculateBalances.isPending}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${recalculateBalances.isPending ? 'animate-spin' : ''}`} />
+              Recalcular saldos
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Conta
+            </Button>
+          </div>
         </div>
 
         {/* Total Balance */}
