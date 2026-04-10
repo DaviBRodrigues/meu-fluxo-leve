@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCategories } from '@/hooks/useCategories';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette } from 'lucide-react';
+import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette, Brain } from 'lucide-react';
 import ThemeSection from '@/components/settings/ThemeSection';
 import { TransactionType } from '@/types/database';
 import { toast } from 'sonner';
