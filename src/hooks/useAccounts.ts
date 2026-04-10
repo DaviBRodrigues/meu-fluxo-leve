@@ -83,6 +83,40 @@ export function useAccounts() {
     },
   });
 
+  const recalculateBalances = useMutation({
+    mutationFn: async () => {
+      // For each account, recalculate balance from transactions
+      for (const account of accounts) {
+        const { data: txns } = await supabase
+          .from('transactions')
+          .select('type, amount')
+          .eq('account_id', account.id);
+
+        if (txns) {
+          const computedBalance = txns.reduce((sum, t) => {
+            return sum + (t.type === 'income' ? Number(t.amount) : -Number(t.amount));
+          }, 0);
+
+          // Keep initial balance difference (user-set balance before any transactions)
+          // If no transactions exist, keep current balance as-is
+          if (txns.length > 0) {
+            await supabase
+              .from('accounts')
+              .update({ balance: computedBalance })
+              .eq('id', account.id);
+          }
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast.success('Saldos recalculados com sucesso!');
+    },
+    onError: () => {
+      toast.error('Erro ao recalcular saldos');
+    },
+  });
+
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
   return {
@@ -92,5 +126,6 @@ export function useAccounts() {
     createAccount,
     updateAccount,
     deleteAccount,
+    recalculateBalances,
   };
 }

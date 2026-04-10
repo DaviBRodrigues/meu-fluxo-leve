@@ -114,18 +114,10 @@ export function useTransactions(filters?: TransactionFilters) {
 
         // Only update balance for the first installment (current month)
         const firstInstallmentAmount = transaction.type === 'income' ? installmentAmount : -installmentAmount;
-        const { data: account } = await supabase
-          .from('accounts')
-          .select('balance')
-          .eq('id', transaction.account_id)
-          .single();
-        
-        if (account) {
-          await supabase
-            .from('accounts')
-            .update({ balance: Number(account.balance) + firstInstallmentAmount })
-            .eq('id', transaction.account_id);
-        }
+        await supabase.rpc('update_account_balance', {
+          p_account_id: transaction.account_id,
+          p_amount_change: firstInstallmentAmount,
+        });
 
         // Log activity
         await logActivity.mutateAsync({
@@ -149,20 +141,12 @@ export function useTransactions(filters?: TransactionFilters) {
 
       if (error) throw error;
 
-      // Update account balance
+      // Update account balance atomically
       const amountChange = transaction.type === 'income' ? transaction.amount : -transaction.amount;
-      const { data: account } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', transaction.account_id)
-        .single();
-      
-      if (account) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(account.balance) + amountChange })
-          .eq('id', transaction.account_id);
-      }
+      await supabase.rpc('update_account_balance', {
+        p_account_id: transaction.account_id,
+        p_amount_change: amountChange,
+      });
 
       // Log activity
       await logActivity.mutateAsync({
@@ -253,20 +237,12 @@ export function useTransactions(filters?: TransactionFilters) {
 
       if (error) throw error;
 
-      // Revert account balance
+      // Revert account balance atomically
       const amountChange = transaction.type === 'income' ? -transaction.amount : transaction.amount;
-      const { data: account } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', transaction.account_id)
-        .single();
-      
-      if (account) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(account.balance) + amountChange })
-          .eq('id', transaction.account_id);
-      }
+      await supabase.rpc('update_account_balance', {
+        p_account_id: transaction.account_id,
+        p_amount_change: amountChange,
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -325,17 +301,10 @@ export function useTransactions(filters?: TransactionFilters) {
       }
 
       for (const [accountId, adjustment] of accountAdjustments) {
-        const { data: account } = await supabase
-          .from('accounts')
-          .select('balance')
-          .eq('id', accountId)
-          .single();
-        if (account) {
-          await supabase
-            .from('accounts')
-            .update({ balance: Number(account.balance) + adjustment })
-            .eq('id', accountId);
-        }
+        await supabase.rpc('update_account_balance', {
+          p_account_id: accountId,
+          p_amount_change: adjustment,
+        });
       }
     },
     onSuccess: () => {
