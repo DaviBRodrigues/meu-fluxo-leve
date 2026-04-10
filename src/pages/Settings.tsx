@@ -45,6 +45,25 @@ export default function SettingsPage() {
   const { reminders, dueReminders } = useRecurringReminders();
   const { accounts } = useAccounts();
 
+  const [financialProfile, setFinancialProfile] = useState('');
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('financial-profile');
+    if (saved) setFinancialProfile(saved);
+  }, []);
+
+  const saveFinancialProfile = () => {
+    localStorage.setItem('financial-profile', financialProfile);
+    setProfileSaved(true);
+    toast.success('Perfil financeiro salvo!');
+    // Limpa cache dos insights para forçar nova análise com o perfil atualizado
+    localStorage.removeItem('smart-analysis-cache');
+    localStorage.removeItem('dashboard-insights-cache');
+    setTimeout(() => setProfileSaved(false), 2000);
+  };
+  const { accounts } = useAccounts();
+
   if (loading) return null;
   if (!user) {
     navigate('/auth');
