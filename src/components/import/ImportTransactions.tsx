@@ -277,22 +277,14 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
         if (error) throw error;
       }
 
-      // Update account balance
+      // Update account balance atomically
       const totalAmount = selectedRows.reduce((sum, r) => sum + r.amount, 0);
       const balanceChange = type === 'income' ? totalAmount : -totalAmount;
 
-      const { data: account } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', accountId)
-        .single();
-
-      if (account) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(account.balance) + balanceChange })
-          .eq('id', accountId);
-      }
+      await supabase.rpc('update_account_balance', {
+        p_account_id: accountId,
+        p_amount_change: balanceChange,
+      });
 
       toast.success(`${selectedRows.length} transações importadas com sucesso!`);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
