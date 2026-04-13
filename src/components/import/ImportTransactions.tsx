@@ -136,8 +136,12 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
 
         setStep('mapping');
         toast.success(`${data.length} linhas encontradas`);
-      },
-    });
+        },
+      });
+    };
+
+    // Try Latin-1 first (most Brazilian banks), fallback handled by Papa
+    reader.readAsText(file, 'ISO-8859-1');
 
     // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = '';
