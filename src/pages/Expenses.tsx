@@ -13,7 +13,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
 import { useBudgets } from '@/hooks/useBudgets';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { ArrowDownCircle, Plus, ChevronLeft, ChevronRight, AlertTriangle, Upload } from 'lucide-react';
+import { ArrowDownCircle, Plus, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Expenses() {
