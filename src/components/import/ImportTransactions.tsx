@@ -93,16 +93,26 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
 
     setFileName(file.name);
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      encoding: 'UTF-8',
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          toast.error('Erro ao ler o arquivo CSV');
-          console.error(results.errors);
-          return;
-        }
+    // Try to detect encoding by reading raw bytes first
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: '',  // auto-detect delimiter (comma, semicolon, tab)
+        complete: (results) => {
+          // Filter out minor parse errors (e.g. trailing delimiters)
+          const criticalErrors = results.errors.filter(
+            e => e.type === 'FieldMismatch' ? false : true
+          );
+          
+          if (criticalErrors.length > 0 && results.data.length === 0) {
+            toast.error('Erro ao ler o arquivo CSV. Verifique o formato.');
+            console.error(results.errors);
+            return;
+          }
 
         const data = results.data as ParsedRow[];
         if (data.length === 0) {
@@ -126,8 +136,12 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
 
         setStep('mapping');
         toast.success(`${data.length} linhas encontradas`);
-      },
-    });
+        },
+      });
+    };
+
+    // Try Latin-1 first (most Brazilian banks), fallback handled by Papa
+    reader.readAsText(file, 'ISO-8859-1');
 
     // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -263,22 +277,14 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
         if (error) throw error;
       }
 
-      // Update account balance
+      // Update account balance atomically
       const totalAmount = selectedRows.reduce((sum, r) => sum + r.amount, 0);
       const balanceChange = type === 'income' ? totalAmount : -totalAmount;
 
-      const { data: account } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('id', accountId)
-        .single();
-
-      if (account) {
-        await supabase
-          .from('accounts')
-          .update({ balance: Number(account.balance) + balanceChange })
-          .eq('id', accountId);
-      }
+      await supabase.rpc('update_account_balance', {
+        p_account_id: accountId,
+        p_amount_change: balanceChange,
+      });
 
       toast.success(`${selectedRows.length} transações importadas com sucesso!`);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
