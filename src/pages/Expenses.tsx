@@ -20,7 +20,6 @@ export default function Expenses() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
