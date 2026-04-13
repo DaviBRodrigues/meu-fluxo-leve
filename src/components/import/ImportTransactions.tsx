@@ -93,16 +93,26 @@ export default function ImportTransactions({ isOpen, onClose, type, onSuccess }:
 
     setFileName(file.name);
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      encoding: 'UTF-8',
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          toast.error('Erro ao ler o arquivo CSV');
-          console.error(results.errors);
-          return;
-        }
+    // Try to detect encoding by reading raw bytes first
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: '',  // auto-detect delimiter (comma, semicolon, tab)
+        complete: (results) => {
+          // Filter out minor parse errors (e.g. trailing delimiters)
+          const criticalErrors = results.errors.filter(
+            e => e.type === 'FieldMismatch' ? false : true
+          );
+          
+          if (criticalErrors.length > 0 && results.data.length === 0) {
+            toast.error('Erro ao ler o arquivo CSV. Verifique o formato.');
+            console.error(results.errors);
+            return;
+          }
 
         const data = results.data as ParsedRow[];
         if (data.length === 0) {
