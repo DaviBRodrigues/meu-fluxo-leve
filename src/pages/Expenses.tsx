@@ -229,14 +229,6 @@ export default function Expenses() {
           isLoading={createTransaction.isPending}
         />
 
-        <ImportTransactions
-          isOpen={isImportOpen}
-          onClose={() => setIsImportOpen(false)}
-          type="expense"
-          onSuccess={() => {
-            // queries will be invalidated by react-query
-          }}
-        />
       </div>
     </AppLayout>
   );
