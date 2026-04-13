@@ -100,10 +100,6 @@ export default function Expenses() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Importar CSV
-            </Button>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Nova Despesa
