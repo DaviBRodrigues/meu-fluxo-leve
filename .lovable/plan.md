@@ -1,63 +1,37 @@
 
 
-# Análise Inteligente com IA
+# Visualização Compacta para Transações
 
-## O que será construído
+## Resumo
 
-Um painel de **Análise Inteligente** na página de Relatórios que usa IA (Lovable AI) para gerar insights personalizados sobre as finanças do usuário. O sistema analisa transações, orçamentos, metas e padrões de gastos, e retorna dicas e alertas em linguagem simples.
+Adicionar um interruptor (toggle) de "Visualização Compacta" na área de filtros das transações. Quando ativado, os itens ficam menores e mais densos, permitindo ver mais transações na tela.
 
-## Funcionalidades
+## Mudanças
 
-1. **Botão "Análise Inteligente"** na página de Relatórios que, ao clicar, envia os dados financeiros do usuário para a IA
-2. **Insights gerados**: tendências de gastos, categorias problemáticas, comparação mês a mês, dicas de economia, alertas de risco
-3. **Resultado visual**: cards com ícones e cores indicando tipo de insight (alerta, dica, elogio)
-4. **Cache local**: salva a última análise no localStorage para não precisar gerar toda vez
+### 1. `src/components/transactions/TransactionFilters.tsx`
+- Adicionar prop `compact` e `onCompactChange`
+- Renderizar um Switch com label "Compacto" ao lado dos filtros de período
+- Persistir a preferência no `localStorage` (`transaction-compact-view`)
 
-## Arquitetura
+### 2. `src/components/transactions/TransactionList.tsx`
+- Adicionar prop `compact` (boolean)
+- Gerenciar estado `compact` internamente (lido do localStorage)
+- Passar para `TransactionFilters`
+- Quando compacto:
+  - Ícone de tipo: `w-8 h-8` (era `w-12 h-12`), ícone interno `w-4 h-4` (era `w-6 h-6`)
+  - Padding do item: `p-2` (era `p-3`), `gap-2` (era `gap-3`)
+  - Valor: `text-sm font-semibold` (era `text-lg font-bold`)
+  - Espaçamento entre itens: `space-y-1` (era `space-y-2`)
+  - Espaçamento entre grupos: `space-y-3` (era `space-y-6`)
+  - Remover `rounded-xl` → `rounded-lg`
+  - Remover `shadow-sm` e `hover:shadow-md`
 
-```text
-[Relatórios] → clica "Analisar" → monta resumo financeiro (client-side)
-    ↓
-[Edge Function: ai-financial-analysis] → Lovable AI Gateway
-    ↓
-Retorna insights estruturados (tool calling / JSON)
-    ↓
-[UI] → Renderiza cards de insights com ícones e cores
-```
+### 3. Páginas (sem alteração necessária)
+O estado é gerido dentro do `TransactionList`, então `Expenses.tsx`, `Income.tsx` e `History.tsx` não precisam de mudanças.
 
-## Implementação técnica
+## Detalhes Técnicos
 
-### 1. Edge Function `ai-financial-analysis`
-- Recebe resumo financeiro (totais por categoria, mês a mês, metas, orçamentos)
-- Envia para Lovable AI com system prompt financeiro em português
-- Usa tool calling para retornar JSON estruturado com array de insights (tipo, título, descrição, severidade)
-- Modelo: `google/gemini-3-flash-preview`
-
-### 2. Componente `SmartAnalysis.tsx`
-- Botão com ícone de cérebro/lâmpada
-- Estado de loading com skeleton animado
-- Renderiza insights em cards coloridos por tipo:
-  - Verde = elogio/positivo
-  - Amarelo = atenção/dica  
-  - Vermelho = alerta/risco
-- Salva resultado + timestamp no localStorage
-
-### 3. Integração na página de Relatórios
-- Adicionado como seção no topo ou após os cards de resumo
-- Disponível para o ano selecionado
-
-### Dados enviados para a IA (sem dados sensíveis pessoais)
-- Receitas e despesas por mês
-- Gastos por categoria
-- Orçamentos definidos vs gastos reais
-- Progresso das metas de economia
-- Saldo atual das contas
-
-## Arquivos
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `supabase/functions/ai-financial-analysis/index.ts` |
-| Criar | `src/components/reports/SmartAnalysis.tsx` |
-| Editar | `src/pages/Reports.tsx` |
+- O estado compacto fica no `localStorage` com chave `transaction-compact-view`
+- O Switch usa o componente `@/components/ui/switch` já existente
+- A transição entre modos usa as classes condicionais via `cn()`
 
