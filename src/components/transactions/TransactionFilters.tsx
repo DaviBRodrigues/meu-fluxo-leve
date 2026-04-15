@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +11,8 @@ interface TransactionFiltersProps {
   onSearchChange: (value: string) => void;
   period: FilterPeriod;
   onPeriodChange: (period: FilterPeriod) => void;
+  compact?: boolean;
+  onCompactChange?: (value: boolean) => void;
 }
 
 const periodLabels: Record<FilterPeriod, string> = {
@@ -24,6 +27,8 @@ export default function TransactionFilters({
   onSearchChange,
   period,
   onPeriodChange,
+  compact,
+  onCompactChange,
 }: TransactionFiltersProps) {
   const periods: FilterPeriod[] = ['today', 'week', 'month', 'all'];
 
