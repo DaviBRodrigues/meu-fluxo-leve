@@ -53,8 +53,16 @@ export default function TransactionList({
 }: TransactionListProps) {
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState<FilterPeriod>('all');
+  const [compact, setCompact] = useState(() => {
+    try { return localStorage.getItem('transaction-compact-view') === 'true'; } catch { return false; }
+  });
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [showGroupDeleteOption, setShowGroupDeleteOption] = useState(false);
+
+  const handleCompactChange = (value: boolean) => {
+    setCompact(value);
+    try { localStorage.setItem('transaction-compact-view', String(value)); } catch {}
+  };
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
@@ -166,6 +174,8 @@ export default function TransactionList({
                 onSearchChange={setSearch}
                 period={period}
                 onPeriodChange={setPeriod}
+                compact={compact}
+                onCompactChange={handleCompactChange}
               />
             </div>
           )}
@@ -183,7 +193,7 @@ export default function TransactionList({
               </div>
             )
           ) : (
-            <div className="space-y-6">
+            <div className={compact ? 'space-y-3' : 'space-y-6'}>
               {sortedDateKeys.map((dateKey) => (
                 <div key={dateKey}>
                   {/* Date Group Header */}
@@ -192,7 +202,7 @@ export default function TransactionList({
                   </h3>
                   
                   {/* Transactions for this date */}
-                  <div className="space-y-2">
+                  <div className={compact ? 'space-y-1' : 'space-y-2'}>
                     <AnimatePresence mode="popLayout">
                       {groupedTransactions[dateKey].map((transaction, index) => (
                         <motion.div
@@ -203,18 +213,24 @@ export default function TransactionList({
                           exit="exit"
                           transition={{ delay: index * 0.03, duration: 0.2 }}
                           layout
-                          className="flex items-center gap-3 p-3 rounded-xl bg-card shadow-sm hover:shadow-md transition-all group"
+                          className={cn(
+                            'flex items-center bg-card transition-all group',
+                            compact
+                              ? 'gap-2 p-2 rounded-lg'
+                              : 'gap-3 p-3 rounded-xl shadow-sm hover:shadow-md'
+                          )}
                         >
                           <div
                             className={cn(
-                              'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
+                              'rounded-xl flex items-center justify-center shrink-0',
+                              compact ? 'w-8 h-8' : 'w-12 h-12',
                               transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
                             )}
                           >
                             {transaction.type === 'income' ? (
-                              <ArrowUpCircle className="w-6 h-6 text-income" />
+                              <ArrowUpCircle className={compact ? 'w-4 h-4 text-income' : 'w-6 h-6 text-income'} />
                             ) : (
-                              <ArrowDownCircle className="w-6 h-6 text-expense" />
+                              <ArrowDownCircle className={compact ? 'w-4 h-4 text-expense' : 'w-6 h-6 text-expense'} />
                             )}
                           </div>
 
@@ -236,7 +252,8 @@ export default function TransactionList({
 
                           <p
                             className={cn(
-                              'font-bold text-lg whitespace-nowrap',
+                              'whitespace-nowrap',
+                              compact ? 'text-sm font-semibold' : 'text-lg font-bold',
                               transaction.type === 'income' ? 'text-income' : 'text-expense'
                             )}
                           >
