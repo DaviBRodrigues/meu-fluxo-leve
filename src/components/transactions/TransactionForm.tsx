@@ -54,6 +54,13 @@ interface TransactionFormProps {
     notes: string | null;
   }) => void;
   isLoading?: boolean;
+  initialData?: {
+    description?: string;
+    amount?: number;
+    category_id?: string;
+    account_id?: string;
+    notes?: string;
+  } | null;
 }
 
 export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoading }: TransactionFormProps) {
