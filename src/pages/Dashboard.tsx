@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivacy } from '@/contexts/PrivacyContext';
+import { useSimpleMode } from '@/contexts/SimpleModeContext';
+import { useShortcuts } from '@/contexts/ShortcutsContext';
 import AppLayout from '@/components/layout/AppLayout';
 import AnimatedStatCard from '@/components/dashboard/AnimatedStatCard';
 import { BalanceHighlight } from '@/components/dashboard/BalanceHighlight';
@@ -23,6 +25,7 @@ import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useSavingsGoals } from '@/hooks/useSavingsGoals';
@@ -61,19 +64,37 @@ const itemVariants = {
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const { isPrivate, togglePrivacy } = usePrivacy();
+  const { simpleMode } = useSimpleMode();
+  const { setNewTransactionHandler } = useShortcuts();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('expense');
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    try { return localStorage.getItem('dashboard-active-tab') || 'overview'; } catch { return 'overview'; }
+  });
 
-  // Show tutorial on first visit
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-active-tab', activeTab); } catch {}
+  }, [activeTab]);
+
   useEffect(() => {
     if (!localStorage.getItem('tutorial-completed')) {
       setIsTutorialOpen(true);
     }
   }, []);
+
+  const handleOpenFormStable = (type: TransactionType) => {
+    setFormType(type);
+    setIsFormOpen(true);
+  };
+
+  useEffect(() => {
+    setNewTransactionHandler((t) => handleOpenFormStable(t));
+    return () => setNewTransactionHandler(null);
+  }, [setNewTransactionHandler]);
 
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
@@ -226,101 +247,82 @@ export default function Dashboard() {
           />
         </motion.div>
 
-        {/* Financial Intelligence Cards */}
-        <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
-          <MonthProjection month={month} year={year} />
-          <BudgetProgress month={month} year={year} />
-        </motion.div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className={simpleMode ? 'grid w-full grid-cols-1' : 'grid w-full grid-cols-3'}>
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            {!simpleMode && <TabsTrigger value="analysis">Análise</TabsTrigger>}
+            {!simpleMode && <TabsTrigger value="achievements">Conquistas</TabsTrigger>}
+          </TabsList>
 
-        {/* AI Insights */}
-        <motion.div variants={itemVariants}>
-          <DashboardInsights
-            totalBalance={totalBalance}
-            monthIncome={totalIncome}
-            monthExpenses={totalExpenses}
-            month={month}
-            year={year}
-          />
-        </motion.div>
-
-        {/* Goals Summary */}
-        {activeGoals.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center justify-between">
-                  <span>Metas Ativas</span>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/metas')}>
-                    Ver todas
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {activeGoals.slice(0, 3).map((goal) => {
-                    const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
-                    return (
-                      <motion.div
-                        key={goal.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="min-w-[200px] p-3 rounded-lg border bg-card"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: goal.color }}
-                          />
-                          <span className="font-medium text-sm truncate">{goal.name}</span>
+          <TabsContent value="overview" className="space-y-8 mt-6">
+            <RecentTransactions transactions={transactions} isLoading={isLoadingTransactions} />
+            {activeGoals.length > 0 && !simpleMode && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-semibold flex items-center justify-between">
+                    <span>Metas Ativas</span>
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/metas')}>
+                      Ver todas
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {activeGoals.slice(0, 3).map((goal) => {
+                      const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
+                      return (
+                        <div key={goal.id} className="min-w-[200px] p-3 rounded-lg border bg-card">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: goal.color }} />
+                            <span className="font-medium text-sm truncate">{goal.name}</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%`, backgroundColor: goal.color }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isPrivate
+                              ? 'R$ ••••• / R$ •••••'
+                              : `${formatCurrency(Number(goal.current_amount))} / ${formatCurrency(Number(goal.target_amount))}`}
+                          </p>
                         </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${progress}%`, backgroundColor: goal.color }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {isPrivate
-                            ? 'R$ ••••• / R$ •••••'
-                            : `${formatCurrency(Number(goal.current_amount))} / ${formatCurrency(Number(goal.target_amount))}`
-                          }
-                        </p>
-                      </motion.div>
-                    );
-                  })}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => navigate('/metas')}
-                    className="min-w-[200px] p-3 rounded-lg border border-dashed flex items-center justify-center gap-2 text-muted-foreground hover:bg-accent transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="text-sm">Nova meta</span>
-                  </motion.button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* Installments Tracker */}
-        <motion.div variants={itemVariants}>
-          <InstallmentsTracker />
-        </motion.div>
+          {!simpleMode && (
+            <TabsContent value="analysis" className="space-y-8 mt-6">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <MonthProjection month={month} year={year} />
+                <BudgetProgress month={month} year={year} />
+              </div>
+              <DashboardInsights
+                totalBalance={totalBalance}
+                monthIncome={totalIncome}
+                monthExpenses={totalExpenses}
+                month={month}
+                year={year}
+              />
+              <InstallmentsTracker />
+              <div className="grid gap-6 lg:grid-cols-2">
+                <MonthlyChart transactions={allTransactions} isLoading={isLoadingTransactions} />
+                <ExpensesByCategory transactions={transactions} isLoading={isLoadingTransactions} />
+              </div>
+            </TabsContent>
+          )}
 
-        {/* Charts */}
-        <motion.div variants={itemVariants} className="grid gap-6 lg:grid-cols-2">
-          <MonthlyChart transactions={allTransactions} isLoading={isLoadingTransactions} />
-          <ExpensesByCategory transactions={transactions} isLoading={isLoadingTransactions} />
-        </motion.div>
-
-        {/* Badges / Conquistas */}
-        <motion.div variants={itemVariants}>
-          <BadgesSection />
-        </motion.div>
-
-        {/* Recent Transactions */}
-        <motion.div variants={itemVariants}>
-          <RecentTransactions transactions={transactions} isLoading={isLoadingTransactions} />
-        </motion.div>
+          {!simpleMode && (
+            <TabsContent value="achievements" className="space-y-8 mt-6">
+              <BadgesSection />
+            </TabsContent>
+          )}
+        </Tabs>
 
         {/* Transaction Form */}
         <TransactionForm
