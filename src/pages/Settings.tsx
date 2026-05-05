@@ -19,10 +19,11 @@ import { useBudgets } from '@/hooks/useBudgets';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useAccounts } from '@/hooks/useAccounts';
 import { formatCurrency, getMonthName } from '@/lib/format';
-import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette, Brain } from 'lucide-react';
+import { Settings, Tag, Bell, PiggyBank, Plus, Trash2, Check, Camera, User, Palette, Brain, Sparkles } from 'lucide-react';
 import ThemeSection from '@/components/settings/ThemeSection';
 import { TransactionType } from '@/types/database';
 import { toast } from 'sonner';
+import { useSimpleMode } from '@/contexts/SimpleModeContext';
 
 export default function SettingsPage() {
   const { user, loading, signOut } = useAuth();
@@ -44,7 +45,7 @@ export default function SettingsPage() {
   const { budgets, createBudget, deleteBudget } = useBudgets(new Date().getMonth() + 1, new Date().getFullYear());
   const { reminders, dueReminders } = useRecurringReminders();
   const { accounts } = useAccounts();
-
+  const { simpleMode, toggleSimpleMode } = useSimpleMode();
   const [financialProfile, setFinancialProfile] = useState('');
   const [profileSaved, setProfileSaved] = useState(false);
 
