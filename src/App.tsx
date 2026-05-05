@@ -2,17 +2,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 import { LayoutThemeProvider } from "@/contexts/LayoutThemeContext";
 import { PrivacyProvider } from "@/contexts/PrivacyContext";
+import { SimpleModeProvider } from "@/contexts/SimpleModeContext";
+import { FiltersProvider } from "@/contexts/FiltersContext";
+import { ShortcutsProvider } from "@/contexts/ShortcutsContext";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Deactivated from "./pages/Deactivated";
-import Income from "./pages/Income";
-import Expenses from "./pages/Expenses";
+import Transactions from "./pages/Transactions";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Goals from "./pages/Goals";
@@ -37,122 +39,49 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (isDeactivated) {
-    return <Deactivated />;
-  }
-
+  if (!user) return <Navigate to="/auth" replace />;
+  if (isDeactivated) return <Deactivated />;
   return <>{children}</>;
+}
+
+function RedirectToTransactions({ type }: { type: 'income' | 'expense' }) {
+  const location = useLocation();
+  return <Navigate to={`/transacoes?type=${type}${location.hash}`} replace />;
 }
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/receitas"
-        element={
-          <ProtectedRoute>
-            <Income />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/despesas"
-        element={
-          <ProtectedRoute>
-            <Expenses />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/contas"
-        element={
-          <ProtectedRoute>
-            <Accounts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/investimentos"
-        element={
-          <ProtectedRoute>
-            <Investments />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orcamentos"
-        element={
-          <ProtectedRoute>
-            <Budgets />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/metas"
-        element={
-          <ProtectedRoute>
-            <Goals />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/relatorios"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/configuracoes"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/historico"
-        element={
-          <ProtectedRoute>
-            <History />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        }
-      />
-
-
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/transacoes" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+      <Route path="/receitas" element={<ProtectedRoute><RedirectToTransactions type="income" /></ProtectedRoute>} />
+      <Route path="/despesas" element={<ProtectedRoute><RedirectToTransactions type="expense" /></ProtectedRoute>} />
+      <Route path="/contas" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+      <Route path="/investimentos" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
+      <Route path="/orcamentos" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+      <Route path="/metas" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+      <Route path="/relatorios" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/historico" element={<ProtectedRoute><History /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
 
 function ThemedApp() {
-  useTheme(); // Applies theme class to document
+  useTheme();
   return (
     <LayoutThemeProvider>
       <PrivacyProvider>
-        <AppRoutes />
+        <SimpleModeProvider>
+          <FiltersProvider>
+            <ShortcutsProvider>
+              <AppRoutes />
+            </ShortcutsProvider>
+          </FiltersProvider>
+        </SimpleModeProvider>
       </PrivacyProvider>
     </LayoutThemeProvider>
   );
