@@ -138,6 +138,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <NavLinks />
         </nav>
         <div className="p-4 border-t border-border space-y-2">
+          <Button variant="outline" className="w-full justify-start gap-3" onClick={openCommandPalette}>
+            <Search className="w-4 h-4" />
+            <span className="text-sm flex-1 text-left">Buscar</span>
+            <kbd className="text-xs opacity-60">⌘K</kbd>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={openHelp}>
+            <Keyboard className="w-4 h-4" />
+            <span className="text-sm">Atalhos</span>
+          </Button>
           <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setIsTutorialOpen(true)}>
             <HelpCircle className="w-4 h-4" />
             <span className="text-sm">Ver Tutorial</span>
