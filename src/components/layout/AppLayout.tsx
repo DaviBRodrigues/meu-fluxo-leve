@@ -204,6 +204,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="font-semibold">Equilibra</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={openCommandPalette}>
+            <Search className="w-5 h-5" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={togglePrivacy}>
             {isPrivate ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </Button>
