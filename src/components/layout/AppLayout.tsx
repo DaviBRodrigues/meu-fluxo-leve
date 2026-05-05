@@ -18,8 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   LayoutDashboard,
-  ArrowUpCircle,
-  ArrowDownCircle,
+  Receipt,
   Wallet,
   Target,
   BarChart3,
@@ -36,22 +35,25 @@ import {
   HelpCircle,
   Eye,
   EyeOff,
+  Search,
+  Keyboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRecurringReminders } from '@/hooks/useRecurringReminders';
 import { useLayoutTheme } from '@/contexts/LayoutThemeContext';
+import { useSimpleMode } from '@/contexts/SimpleModeContext';
+import { useShortcuts } from '@/contexts/ShortcutsContext';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 
 const baseNavItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/receitas', label: 'Receitas', icon: ArrowUpCircle },
-  { href: '/despesas', label: 'Despesas', icon: ArrowDownCircle },
-  { href: '/contas', label: 'Contas', icon: Wallet },
-  { href: '/investimentos', label: 'Investimentos', icon: TrendingUp },
-  { href: '/orcamentos', label: 'Orçamentos', icon: PiggyBank },
-  { href: '/metas', label: 'Metas', icon: Target },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
-  { href: '/historico', label: 'Histórico', icon: History },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, advanced: false },
+  { href: '/transacoes', label: 'Transações', icon: Receipt, advanced: false },
+  { href: '/contas', label: 'Contas', icon: Wallet, advanced: false },
+  { href: '/investimentos', label: 'Investimentos', icon: TrendingUp, advanced: true },
+  { href: '/orcamentos', label: 'Orçamentos', icon: PiggyBank, advanced: false },
+  { href: '/metas', label: 'Metas', icon: Target, advanced: true },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart3, advanced: true },
+  { href: '/historico', label: 'Histórico', icon: History, advanced: false },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
