@@ -144,8 +144,28 @@ export default function SettingsPage() {
           </TabsList>
 
           {/* Appearance Tab */}
-          <TabsContent value="appearance" className="mt-6">
+          <TabsContent value="appearance" className="mt-6 space-y-4">
             <ThemeSection />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  Modo Simplificado
+                </CardTitle>
+                <CardDescription>
+                  Esconde recursos avançados (Investimentos, Metas, Relatórios, Conquistas, Insights de IA) para uma experiência mais focada no essencial.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Apenas o essencial</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ideal para quem só quer registrar receitas e despesas.
+                  </p>
+                </div>
+                <Switch checked={simpleMode} onCheckedChange={toggleSimpleMode} />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Financial Profile Tab */}
