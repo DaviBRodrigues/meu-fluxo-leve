@@ -169,6 +169,7 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
     reset();
     setDate(new Date());
     setSelectedParentId('');
+    setSuggestedFromHistory(false);
     onClose();
   };
 
