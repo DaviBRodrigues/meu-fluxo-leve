@@ -246,16 +246,16 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
 
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select onValueChange={(v) => {
-                setSelectedParentId(v);
-                // If this category has no subcategories, set it directly
-                const subs = getSubcategories(v);
-                if (subs.length === 0) {
-                  setValue('category_id', v);
-                } else {
-                  setValue('category_id', '');
-                }
-              }}>
+              <Select
+                value={selectedParentId}
+                onValueChange={(v) => {
+                  setSelectedParentId(v);
+                  setSuggestedFromHistory(false);
+                  const subs = getSubcategories(v);
+                  if (subs.length === 0) setValue('category_id', v);
+                  else setValue('category_id', '');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -273,6 +273,12 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
                   ))}
                 </SelectContent>
               </Select>
+              {suggestedFromHistory && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Sugerido com base no histórico
+                </p>
+              )}
               {errors.category_id && (
                 <p className="text-sm text-destructive">{errors.category_id.message}</p>
               )}
