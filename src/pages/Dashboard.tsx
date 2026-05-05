@@ -64,19 +64,37 @@ const itemVariants = {
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const { isPrivate, togglePrivacy } = usePrivacy();
+  const { simpleMode } = useSimpleMode();
+  const { setNewTransactionHandler } = useShortcuts();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('expense');
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    try { return localStorage.getItem('dashboard-active-tab') || 'overview'; } catch { return 'overview'; }
+  });
 
-  // Show tutorial on first visit
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-active-tab', activeTab); } catch {}
+  }, [activeTab]);
+
   useEffect(() => {
     if (!localStorage.getItem('tutorial-completed')) {
       setIsTutorialOpen(true);
     }
   }, []);
+
+  const handleOpenFormStable = (type: TransactionType) => {
+    setFormType(type);
+    setIsFormOpen(true);
+  };
+
+  useEffect(() => {
+    setNewTransactionHandler((t) => handleOpenFormStable(t));
+    return () => setNewTransactionHandler(null);
+  }, [setNewTransactionHandler]);
 
   const month = selectedDate.getMonth() + 1;
   const year = selectedDate.getFullYear();
