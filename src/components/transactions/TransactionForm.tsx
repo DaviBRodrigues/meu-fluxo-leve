@@ -63,12 +63,14 @@ interface TransactionFormProps {
   } | null;
 }
 
-export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoading }: TransactionFormProps) {
+export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoading, initialData }: TransactionFormProps) {
   const { categories, getSubcategories } = useCategories(type);
   const parentCategories = categories.filter(c => !c.parent_id);
   const { accounts } = useAccounts();
+  const { transactions: historyTransactions } = useTransactions();
   const [date, setDate] = useState<Date>(new Date());
   const [selectedParentId, setSelectedParentId] = useState<string>('');
+  const [suggestedFromHistory, setSuggestedFromHistory] = useState(false);
 
   const {
     register,
@@ -93,10 +95,52 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
     },
   });
 
+  const watchDescription = watch('description');
   const watchRecurrence = watch('recurrence');
   const watchIsRecurring = watch('is_recurring');
   const watchIsInstallment = watch('is_installment');
   const watchInstallmentCount = watch('installment_count');
+  const watchCategoryId = watch('category_id');
+
+  // Apply initialData (used for duplicating a transaction)
+  useEffect(() => {
+    if (isOpen && initialData) {
+      if (initialData.description) setValue('description', initialData.description);
+      if (initialData.amount !== undefined) {
+        setValue('amount', initialData.amount.toFixed(2).replace('.', ','));
+      }
+      if (initialData.account_id) setValue('account_id', initialData.account_id);
+      if (initialData.notes) setValue('notes', initialData.notes);
+      if (initialData.category_id) {
+        const cat = categories.find(c => c.id === initialData.category_id);
+        if (cat?.parent_id) setSelectedParentId(cat.parent_id);
+        else if (cat) setSelectedParentId(cat.id);
+        setValue('category_id', initialData.category_id);
+      }
+    }
+  }, [isOpen, initialData, categories, setValue]);
+
+  // Suggest category from description history
+  useEffect(() => {
+    if (!watchDescription || watchDescription.length < 3 || watchCategoryId || initialData) return;
+    const desc = watchDescription.toLowerCase().trim();
+    const matches = historyTransactions
+      .filter((t) => t.type === type && t.description.toLowerCase().includes(desc))
+      .slice(0, 20);
+    if (matches.length === 0) return;
+    const counts = new Map<string, number>();
+    for (const m of matches) counts.set(m.category_id, (counts.get(m.category_id) || 0) + 1);
+    const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (best) {
+      const cat = categories.find((c) => c.id === best[0]);
+      if (cat) {
+        if (cat.parent_id) setSelectedParentId(cat.parent_id);
+        else setSelectedParentId(cat.id);
+        setValue('category_id', cat.id);
+        setSuggestedFromHistory(true);
+      }
+    }
+  }, [watchDescription, historyTransactions, type, categories, watchCategoryId, initialData, setValue]);
 
   const handleFormSubmit = (data: FormData) => {
     const amount = parseFloat(data.amount.replace(/\./g, '').replace(',', '.'));
