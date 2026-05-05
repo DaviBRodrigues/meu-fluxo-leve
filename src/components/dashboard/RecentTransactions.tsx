@@ -20,7 +20,7 @@ export default function RecentTransactions({ transactions, isLoading }: RecentTr
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-semibold">Transações Recentes</CardTitle>
-        <Link to="/despesas">
+        <Link to="/transacoes">
           <Button variant="ghost" size="sm" className="text-muted-foreground">
             Ver todas <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
