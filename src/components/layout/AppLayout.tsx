@@ -62,6 +62,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile } = useProfile();
   const { theme, toggleTheme } = useTheme();
   const { isPrivate, togglePrivacy } = usePrivacy();
+  const { simpleMode } = useSimpleMode();
+  const { openCommandPalette, openHelp } = useShortcuts();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -69,10 +71,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { dueReminders } = useRecurringReminders();
   const { config } = useLayoutTheme();
 
-  // Add admin link if user is admin
-  const navItems = isAdmin
-    ? [...baseNavItems, { href: '/admin', label: 'Admin', icon: Shield }]
+  const visibleBaseItems = simpleMode
+    ? baseNavItems.filter((i) => !i.advanced)
     : baseNavItems;
+
+  const navItems = isAdmin
+    ? [...visibleBaseItems, { href: '/admin', label: 'Admin', icon: Shield, advanced: false }]
+    : visibleBaseItems;
 
   const handleSignOut = async () => {
     try {
