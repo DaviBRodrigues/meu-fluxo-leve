@@ -44,7 +44,8 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 142 76% 36%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
+    --ease-fluid: cubic-bezier(0.65, 0.05, 0.36, 1);
     --font-family: 'Inter', 'system-ui', sans-serif;
     --number-font-family: 'Inter', 'system-ui', sans-serif;
     --container-padding: 1rem;
@@ -138,18 +139,55 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-family);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% 0%, hsl(var(--primary) / 0.06), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 100% 20%, hsl(var(--chart-2) / 0.05), transparent 60%),
+      radial-gradient(ellipse 90% 50% at 50% 100%, hsl(var(--chart-3) / 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  /* Fluid easing globally on interactive elements */
+  button, a, [role="button"], input, select, textarea,
+  .transition, .transition-all, .transition-colors, .transition-transform, .transition-opacity {
+    transition-timing-function: var(--ease-fluid) !important;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-card/80 backdrop-blur-sm;
+    @apply bg-card/70 backdrop-blur-md;
   }
 
   .font-number {
     font-family: var(--number-font-family);
   }
+
+  /* Fluid wave decorative divider */
+  .wave-divider {
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'><path d='M0 20 Q 150 0 300 20 T 600 20 T 900 20 T 1200 20 V40 H0Z' fill='black'/></svg>");
+            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'><path d='M0 20 Q 150 0 300 20 T 600 20 T 900 20 T 1200 20 V40 H0Z' fill='black'/></svg>");
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+  }
+
+  /* Animated gentle wave shimmer for accents */
+  @keyframes wave-flow {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    50%      { transform: translateX(-2%) translateY(-1%); }
+  }
+  .wave-flow {
+    animation: wave-flow 12s ease-in-out infinite;
+  }
 }
+
+/* Subtle organic radii — asymmetric corners on cards only for fluid feel */
+[class*="rounded-xl"].bg-card,
+.bg-card.rounded-xl,
+[data-slot="card"],
+.card-themed {
+  border-radius: 1.25rem 1.5rem 1.25rem 1.5rem;
+}
+
 
 /* Layout preset overrides */
 [data-layout="modern-glass"] .card-themed {
