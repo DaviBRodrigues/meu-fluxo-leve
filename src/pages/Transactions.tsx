@@ -160,7 +160,7 @@ export default function Transactions() {
               Nova Receita
             </Button>
             <Button onClick={() => openForm('expense')}>
-              <Plus className="w-4 h-4 mr-2" />
+              <ArrowDownCircle className="w-4 h-4 mr-2 text-expense" />
               Nova Despesa
             </Button>
           </div>
