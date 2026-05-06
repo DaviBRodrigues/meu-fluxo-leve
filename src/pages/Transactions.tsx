@@ -155,12 +155,18 @@ export default function Transactions() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => openForm('income')}>
-              <ArrowUpCircle className="w-4 h-4 mr-2 text-income" />
+            <Button
+              className="bg-income text-white hover:bg-income/90"
+              onClick={() => openForm('income')}
+            >
+              <ArrowUpCircle className="w-4 h-4 mr-2" />
               Nova Receita
             </Button>
-            <Button variant="outline" onClick={() => openForm('expense')}>
-              <ArrowDownCircle className="w-4 h-4 mr-2 text-expense" />
+            <Button
+              className="bg-expense text-white hover:bg-expense/90"
+              onClick={() => openForm('expense')}
+            >
+              <ArrowDownCircle className="w-4 h-4 mr-2" />
               Nova Despesa
             </Button>
           </div>
