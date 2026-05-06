@@ -180,12 +180,12 @@
   }
 }
 
-/* Subtle organic radii — asymmetric corners on cards for fluid feel */
-.rounded-xl {
+/* Subtle organic radii — asymmetric corners on cards only for fluid feel */
+[class*="rounded-xl"].bg-card,
+.bg-card.rounded-xl,
+[data-slot="card"],
+.card-themed {
   border-radius: 1.25rem 1.5rem 1.25rem 1.5rem;
-}
-.rounded-lg {
-  border-radius: 1rem 1.15rem 1rem 1.15rem;
 }
 
 
