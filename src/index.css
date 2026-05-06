@@ -44,7 +44,8 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 142 76% 36%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
+    --ease-fluid: cubic-bezier(0.65, 0.05, 0.36, 1);
     --font-family: 'Inter', 'system-ui', sans-serif;
     --number-font-family: 'Inter', 'system-ui', sans-serif;
     --container-padding: 1rem;
