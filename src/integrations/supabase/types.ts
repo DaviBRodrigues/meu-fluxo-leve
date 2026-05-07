@@ -24,6 +24,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
+          is_bypass: boolean
           max_uses: number | null
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          is_bypass?: boolean
           max_uses?: number | null
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          is_bypass?: boolean
           max_uses?: number | null
         }
         Relationships: []
@@ -352,44 +355,68 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_via_bypass: boolean
           avatar_url: string | null
           created_at: string
           created_by: string | null
           full_name: string | null
+          hotmart_subscriber_code: string | null
+          hotmart_transaction_id: string | null
           id: string
           is_active: boolean
           is_test_user: boolean
           last_seen_at: string | null
+          subscription_expires_at: string | null
+          subscription_started_at: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
           test_expiration_days: number | null
           test_expires_at: string | null
+          trial_expires_at: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          access_via_bypass?: boolean
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
           full_name?: string | null
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
           id?: string
           is_active?: boolean
           is_test_user?: boolean
           last_seen_at?: string | null
+          subscription_expires_at?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
           test_expiration_days?: number | null
           test_expires_at?: string | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          access_via_bypass?: boolean
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
           full_name?: string | null
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
           id?: string
           is_active?: boolean
           is_test_user?: boolean
           last_seen_at?: string | null
+          subscription_expires_at?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
           test_expiration_days?: number | null
           test_expires_at?: string | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -532,6 +559,45 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          error_message: string | null
+          event_type: string
+          hotmart_subscriber_code: string | null
+          hotmart_transaction_id: string | null
+          id: string
+          processed: boolean
+          raw_payload: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          event_type: string
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
+          id?: string
+          processed?: boolean
+          raw_payload: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          event_type?: string
+          hotmart_subscriber_code?: string | null
+          hotmart_transaction_id?: string | null
+          id?: string
+          processed?: boolean
+          raw_payload?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       test_user_credentials: {
         Row: {
           created_at: string
@@ -666,6 +732,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -683,6 +750,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       recurrence_type: "fixed" | "variable"
+      subscription_status:
+        | "pending"
+        | "trial"
+        | "active"
+        | "expired"
+        | "cancelled"
       transaction_type: "income" | "expense"
     }
     CompositeTypes: {
@@ -813,6 +886,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       recurrence_type: ["fixed", "variable"],
+      subscription_status: [
+        "pending",
+        "trial",
+        "active",
+        "expired",
+        "cancelled",
+      ],
       transaction_type: ["income", "expense"],
     },
   },
