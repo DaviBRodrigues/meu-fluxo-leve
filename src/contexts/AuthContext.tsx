@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -122,6 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: { full_name: fullName },
       },
     });
+
+    // Iniciar trial gratuito automaticamente
+    if (!error && data.session) {
+      setTimeout(() => {
+        supabase.functions.invoke('activate-subscription', {
+          body: { action: 'start_trial' },
+        }).catch(() => { /* silencioso */ });
+      }, 500);
+    }
 
     return { error: error as Error | null };
   };
