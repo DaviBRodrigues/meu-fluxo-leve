@@ -23,15 +23,18 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
+import Checkout from "./pages/Checkout";
+import { useSubscription } from "@/hooks/useSubscription";
 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, allowWithoutSubscription = false }: { children: React.ReactNode; allowWithoutSubscription?: boolean }) {
   const { user, loading, isDeactivated } = useAuth();
+  const { subscription, isLoading: subLoading } = useSubscription();
 
-  if (loading) {
+  if (loading || (user && subLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -41,6 +44,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) return <Navigate to="/auth" replace />;
   if (isDeactivated) return <Deactivated />;
+  if (!allowWithoutSubscription && subscription && !subscription.hasAccess) {
+    return <Navigate to="/checkout" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -65,6 +71,7 @@ function AppRoutes() {
       <Route path="/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/historico" element={<ProtectedRoute><History /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+      <Route path="/checkout" element={<ProtectedRoute allowWithoutSubscription><Checkout /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
