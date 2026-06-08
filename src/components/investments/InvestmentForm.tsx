@@ -49,6 +49,7 @@ interface InvestmentFormProps {
     name: string;
     category_id?: string;
     target_amount?: number;
+    initial_balance?: number;
     color: string;
     notes?: string;
   }) => void;
