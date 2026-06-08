@@ -33,6 +33,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   category_id: z.string().optional(),
   target_amount: z.string().optional(),
+  initial_balance: z.string().optional(),
   color: z.string(),
   notes: z.string().optional(),
 });
@@ -48,6 +49,7 @@ interface InvestmentFormProps {
     name: string;
     category_id?: string;
     target_amount?: number;
+    initial_balance?: number;
     color: string;
     notes?: string;
   }) => void;
@@ -76,6 +78,7 @@ export default function InvestmentForm({
       name: investment?.name || '',
       category_id: investment?.category_id || undefined,
       target_amount: investment?.target_amount?.toString() || '',
+      initial_balance: '',
       color: investment?.color || '#10B981',
       notes: investment?.notes || '',
     },
@@ -86,6 +89,7 @@ export default function InvestmentForm({
       name: data.name,
       category_id: data.category_id || undefined,
       target_amount: data.target_amount ? parseFloat(data.target_amount) : undefined,
+      initial_balance: !investment && data.initial_balance ? parseFloat(data.initial_balance) : undefined,
       color: data.color,
       notes: data.notes || undefined,
     });
@@ -221,6 +225,30 @@ export default function InvestmentForm({
                 </FormItem>
               )}
             />
+
+            {!investment && (
+              <FormField
+                control={form.control}
+                name="initial_balance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Já tenho guardado (opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Saldo inicial dessa caixinha. Não desconta de nenhuma conta — use para registrar dinheiro que você já tem guardado.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
