@@ -185,16 +185,53 @@ export default function InvestmentCard({
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir investimento?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir caixinha?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O investimento "{investment.name}" e todo
-              seu histórico serão removidos permanentemente.
+              A caixinha "{investment.name}" e todo seu histórico serão removidos permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id={`refund-${investment.id}`}
+                checked={refund}
+                onCheckedChange={(c) => setRefund(c === true)}
+              />
+              <div className="grid gap-1">
+                <Label htmlFor={`refund-${investment.id}`} className="cursor-pointer">
+                  Devolver saldo para uma conta
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Devolve o total aportado ({formatCurrency(Number(investment.initial_amount))}) para a conta escolhida. Desmarque se o dinheiro nunca saiu de uma conta sua (ex: saldo inicial).
+                </p>
+              </div>
+            </div>
+
+            {refund && (
+              <Select value={refundAccountId} onValueChange={setRefundAccountId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: a.color }} />
+                        {a.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => onDelete(investment.id)}
+              onClick={() => onDelete(investment.id, refund ? refundAccountId : undefined)}
+              disabled={refund && !refundAccountId}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Excluir
