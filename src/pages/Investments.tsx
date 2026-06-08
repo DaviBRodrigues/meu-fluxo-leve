@@ -178,7 +178,8 @@ export default function Investments() {
                       setEditingInvestment(inv);
                       setShowForm(true);
                     }}
-                    onDelete={(id) => deleteInvestment.mutate(id)}
+                    onDelete={(id, refundAccountId) => deleteInvestment.mutate({ id, refundAccountId })}
+                    accounts={accounts.filter((a) => a.is_active)}
                   />
                 ))}
               </div>
