@@ -78,6 +78,7 @@ export default function InvestmentForm({
       name: investment?.name || '',
       category_id: investment?.category_id || undefined,
       target_amount: investment?.target_amount?.toString() || '',
+      initial_balance: '',
       color: investment?.color || '#10B981',
       notes: investment?.notes || '',
     },
@@ -88,6 +89,7 @@ export default function InvestmentForm({
       name: data.name,
       category_id: data.category_id || undefined,
       target_amount: data.target_amount ? parseFloat(data.target_amount) : undefined,
+      initial_balance: !investment && data.initial_balance ? parseFloat(data.initial_balance) : undefined,
       color: data.color,
       notes: data.notes || undefined,
     });
