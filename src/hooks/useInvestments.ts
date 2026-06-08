@@ -91,13 +91,21 @@ export function useInvestments() {
       name: string;
       category_id?: string;
       target_amount?: number;
+      initial_balance?: number;
       color: string;
       icon?: string;
       notes?: string;
     }) => {
+      const { initial_balance, ...rest } = investment;
+      const startingAmount = initial_balance && initial_balance > 0 ? initial_balance : 0;
       const { data, error } = await supabase
         .from('investments')
-        .insert({ ...investment, user_id: user!.id })
+        .insert({
+          ...rest,
+          user_id: user!.id,
+          current_amount: startingAmount,
+          initial_amount: startingAmount,
+        })
         .select()
         .single();
 
