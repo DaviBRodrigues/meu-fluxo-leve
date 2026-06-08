@@ -33,6 +33,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   category_id: z.string().optional(),
   target_amount: z.string().optional(),
+  initial_balance: z.string().optional(),
   color: z.string(),
   notes: z.string().optional(),
 });
