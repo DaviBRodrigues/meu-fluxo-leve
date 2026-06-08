@@ -3,6 +3,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,20 +29,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { MoreVertical, Plus, Minus, TrendingUp, Trash2, Pencil } from 'lucide-react';
-import { Investment } from '@/types/database';
+import { Account, Investment } from '@/types/database';
 import { formatCurrency } from '@/lib/format';
 
 interface InvestmentCardProps {
   investment: Investment;
+  accounts: Account[];
   onDeposit: (investment: Investment) => void;
   onWithdraw: (investment: Investment) => void;
   onAddYield: (investment: Investment) => void;
   onEdit: (investment: Investment) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, refundAccountId?: string) => void;
 }
 
 export default function InvestmentCard({
   investment,
+  accounts,
   onDeposit,
   onWithdraw,
   onAddYield,
@@ -41,6 +52,8 @@ export default function InvestmentCard({
   onDelete,
 }: InvestmentCardProps) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [refund, setRefund] = useState(true);
+  const [refundAccountId, setRefundAccountId] = useState<string>(accounts[0]?.id || '');
 
   const yieldAmount = Number(investment.current_amount) - Number(investment.initial_amount);
   const yieldPercentage = Number(investment.initial_amount) > 0
