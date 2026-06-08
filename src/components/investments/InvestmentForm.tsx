@@ -226,6 +226,30 @@ export default function InvestmentForm({
               )}
             />
 
+            {!investment && (
+              <FormField
+                control={form.control}
+                name="initial_balance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Já tenho guardado (opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Saldo inicial dessa caixinha. Não desconta de nenhuma conta — use para registrar dinheiro que você já tem guardado.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="color"
