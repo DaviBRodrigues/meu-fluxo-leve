@@ -143,9 +143,31 @@ export function useInvestments() {
     },
   });
 
-  // Delete investment
+  // Delete investment (optionally refunds remaining balance back to an account)
   const deleteInvestment = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, refundAccountId }: { id: string; refundAccountId?: string }) => {
+      if (refundAccountId) {
+        // Refund net deposits (deposits - withdrawals, ignoring yields) back to the chosen account
+        const { data: txs } = await supabase
+          .from('investment_transactions')
+          .select('type, amount')
+          .eq('investment_id', id);
+
+        const net = (txs || []).reduce((sum, tx) => {
+          const amt = Number(tx.amount);
+          if (tx.type === 'deposit') return sum + amt;
+          if (tx.type === 'withdrawal') return sum - amt;
+          return sum;
+        }, 0);
+
+        if (net > 0) {
+          await supabase.rpc('update_account_balance', {
+            p_account_id: refundAccountId,
+            p_amount_change: net,
+          });
+        }
+      }
+
       const { error } = await supabase
         .from('investments')
         .delete()
@@ -153,10 +175,11 @@ export function useInvestments() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: ['investments'] });
       queryClient.invalidateQueries({ queryKey: ['investment-transactions'] });
-      toast.success('Investimento removido!');
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast.success(vars.refundAccountId ? 'Caixinha removida e saldo devolvido!' : 'Investimento removido!');
     },
     onError: () => {
       toast.error('Erro ao remover investimento');
