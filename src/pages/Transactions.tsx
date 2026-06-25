@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import TransactionForm from '@/components/transactions/TransactionForm';
+import BulkTransactionForm from '@/components/transactions/BulkTransactionForm';
 import TransactionList from '@/components/transactions/TransactionList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import {
   ChevronRight,
   AlertTriangle,
   Receipt,
+  Table as TableIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TransactionType } from '@/types/database';
@@ -40,6 +42,8 @@ export default function Transactions() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(initialType);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [bulkDefaultType, setBulkDefaultType] = useState<TransactionType>('expense');
   const [formType, setFormType] = useState<TransactionType>('expense');
   const [initialFormData, setInitialFormData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -155,6 +159,17 @@ export default function Transactions() {
             </div>
           </div>
           <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBulkDefaultType('expense');
+                setIsBulkOpen(true);
+              }}
+            >
+              <TableIcon className="w-4 h-4 mr-2" />
+              Lançar em lote
+            </Button>
             <Button
               className="bg-income text-white hover:bg-income/90"
               onClick={() => openForm('income')}
@@ -329,6 +344,14 @@ export default function Transactions() {
           onSubmit={(data) => createTransaction.mutate(data)}
           isLoading={createTransaction.isPending}
           initialData={initialFormData}
+        />
+
+        {/* Bulk Form */}
+        <BulkTransactionForm
+          isOpen={isBulkOpen}
+          onClose={() => setIsBulkOpen(false)}
+          defaultType={bulkDefaultType}
+          onSubmit={(data) => createTransaction.mutateAsync(data)}
         />
       </div>
     </AppLayout>
