@@ -142,7 +142,7 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
     }
   }, [watchDescription, historyTransactions, type, categories, watchCategoryId, initialData, setValue]);
 
-  const handleFormSubmit = (data: FormData) => {
+  const handleFormSubmit = (data: FormData, keepOpen = false) => {
     const amount = parseFloat(data.amount.replace(/\./g, '').replace(',', '.'));
     if (isNaN(amount) || amount <= 0) return;
 
@@ -160,9 +160,32 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
       notes: data.notes || null,
     });
 
-    reset();
-    setDate(new Date());
-    onClose();
+    if (keepOpen) {
+      // Reset only the variable fields, keep date/account/category/recurrence
+      reset({
+        description: '',
+        amount: '',
+        date: data.date,
+        category_id: data.category_id,
+        account_id: data.account_id,
+        recurrence: data.recurrence,
+        is_recurring: data.is_recurring,
+        is_installment: false,
+        installment_count: undefined,
+        notes: '',
+      });
+      setSuggestedFromHistory(false);
+      // Refocus description for fast entry
+      setTimeout(() => {
+        const el = document.getElementById('description') as HTMLInputElement | null;
+        el?.focus();
+      }, 50);
+    } else {
+      reset();
+      setDate(new Date());
+      setSelectedParentId('');
+      onClose();
+    }
   };
 
   const handleClose = () => {
@@ -184,7 +207,7 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit((d) => handleFormSubmit(d, false))} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Input
@@ -423,13 +446,23 @@ export default function TransactionForm({ type, isOpen, onClose, onSubmit, isLoa
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button type="button" variant="outline" className="sm:flex-1" onClick={handleClose}>
               Cancelar
             </Button>
             <Button
+              type="button"
+              variant="secondary"
+              className="sm:flex-1"
+              disabled={isLoading}
+              onClick={handleSubmit((d) => handleFormSubmit(d, true))}
+              title="Salva e mantém o formulário aberto para lançar outra"
+            >
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Salvar e adicionar outra'}
+            </Button>
+            <Button
               type="submit"
-              className="flex-1"
+              className="sm:flex-1"
               disabled={isLoading}
             >
               {isLoading ? <Loader2 className="animate-spin" /> : 'Salvar'}
