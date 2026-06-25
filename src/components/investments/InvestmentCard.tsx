@@ -67,19 +67,19 @@ export default function InvestmentCard({
   return (
     <>
       <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${investment.color}20` }}
               >
-                <TrendingUp className="w-6 h-6" style={{ color: investment.color }} />
+                <TrendingUp className="w-5 h-5" style={{ color: investment.color }} />
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground">{investment.name}</h3>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-foreground text-sm truncate">{investment.name}</h3>
                 {investment.category && (
-                  <Badge variant="secondary" className="text-xs mt-1">
+                  <Badge variant="secondary" className="text-[10px] mt-0.5 px-1.5 py-0">
                     {investment.category.name}
                   </Badge>
                 )}
@@ -87,19 +87,11 @@ export default function InvestmentCard({
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDeposit(investment)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Aportar
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onWithdraw(investment)}>
-                  <Minus className="w-4 h-4 mr-2" />
-                  Resgatar
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAddYield(investment)}>
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Registrar Rendimento
@@ -119,51 +111,47 @@ export default function InvestmentCard({
             </DropdownMenu>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                 {formatCurrency(Number(investment.current_amount))}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm text-muted-foreground">
-                  Investido: {formatCurrency(Number(investment.initial_amount))}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                <span className="text-xs text-muted-foreground">
+                  Aportado: {formatCurrency(Number(investment.initial_amount))}
                 </span>
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-xs font-medium ${
                     yieldAmount >= 0 ? 'text-emerald-500' : 'text-destructive'
                   }`}
                 >
                   {yieldAmount >= 0 ? '+' : ''}
-                  {formatCurrency(yieldAmount)} ({yieldPercentage.toFixed(2)}%)
+                  {formatCurrency(yieldAmount)} ({yieldPercentage.toFixed(1)}%)
                 </span>
               </div>
             </div>
 
             {progress !== null && (
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Meta</span>
-                  <span className="text-foreground">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Meta {progress.toFixed(0)}%</span>
+                  <span className="text-foreground tabular-nums">
                     {formatCurrency(Number(investment.target_amount))}
                   </span>
                 </div>
-                <Progress value={progress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-1 text-right">
-                  {progress.toFixed(0)}% alcançado
-                </p>
+                <Progress value={progress} className="h-1.5" />
               </div>
             )}
 
             {investment.notes && (
-              <p className="text-sm text-muted-foreground mt-2">{investment.notes}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{investment.notes}</p>
             )}
           </div>
 
-          <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
               onClick={() => onDeposit(investment)}
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -172,7 +160,6 @@ export default function InvestmentCard({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
               onClick={() => onWithdraw(investment)}
             >
               <Minus className="w-4 h-4 mr-1" />

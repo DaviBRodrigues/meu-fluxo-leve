@@ -106,20 +106,20 @@ export default function Investments() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-5 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Investimentos</h1>
-            <p className="text-muted-foreground">Suas caixinhas de investimento</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Investimentos</h1>
+            <p className="text-sm text-muted-foreground">Suas caixinhas de investimento</p>
           </div>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Nova Caixinha
           </Button>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <AnimatedStatCard
             title="Total Investido"
             value={totalInvested}
@@ -135,25 +135,27 @@ export default function Investments() {
             value={totalInitial}
             icon={Wallet}
           />
-          <AnimatedStatCard
-            title="Rendimentos"
-            value={totalYield}
-            icon={TrendingUp}
-            trend={
-              totalInitial > 0
-                ? {
-                    value: `${yieldPercentage.toFixed(2)}%`,
-                    isPositive: yieldPercentage >= 0,
-                  }
-                : undefined
-            }
-          />
+          <div className="col-span-2 md:col-span-1">
+            <AnimatedStatCard
+              title="Rendimentos"
+              value={totalYield}
+              icon={TrendingUp}
+              trend={
+                totalInitial > 0
+                  ? {
+                      value: `${yieldPercentage.toFixed(2)}%`,
+                      isPositive: yieldPercentage >= 0,
+                    }
+                  : undefined
+              }
+            />
+          </div>
         </div>
 
         <Tabs defaultValue="investments" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="investments">Caixinhas</TabsTrigger>
-            <TabsTrigger value="history">Histórico</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="investments" className="flex-1 sm:flex-none">Caixinhas</TabsTrigger>
+            <TabsTrigger value="history" className="flex-1 sm:flex-none">Histórico</TabsTrigger>
           </TabsList>
 
           <TabsContent value="investments">
@@ -166,7 +168,7 @@ export default function Investments() {
                 onAction={() => setShowForm(true)}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {investments.map((investment) => (
                   <InvestmentCard
                     key={investment.id}
@@ -195,67 +197,61 @@ export default function Investments() {
               />
             ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle>Histórico de Movimentações</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">Histórico de Movimentações</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {transactions.map((tx) => (
-                      <div
-                        key={tx.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              tx.type === 'deposit'
-                                ? 'bg-emerald-500/20'
-                                : tx.type === 'withdrawal'
-                                ? 'bg-destructive/20'
-                                : 'bg-primary/20'
-                            }`}
-                          >
-                            {tx.type === 'deposit' ? (
-                              <ArrowUpRight className="w-5 h-5 text-emerald-500" />
-                            ) : tx.type === 'withdrawal' ? (
-                              <ArrowDownRight className="w-5 h-5 text-destructive" />
-                            ) : (
-                              <TrendingUp className="w-5 h-5 text-primary" />
-                            )}
+                  <div className="space-y-2">
+                    {transactions.map((tx) => {
+                      const isDeposit = tx.type === 'deposit';
+                      const isWithdraw = tx.type === 'withdrawal';
+                      const colorClass = isDeposit
+                        ? 'text-emerald-500'
+                        : isWithdraw
+                        ? 'text-destructive'
+                        : 'text-primary';
+                      const bgClass = isDeposit
+                        ? 'bg-emerald-500/15'
+                        : isWithdraw
+                        ? 'bg-destructive/15'
+                        : 'bg-primary/15';
+                      return (
+                        <div
+                          key={tx.id}
+                          className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/40"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${bgClass}`}>
+                              {isDeposit ? (
+                                <ArrowUpRight className={`w-4 h-4 ${colorClass}`} />
+                              ) : isWithdraw ? (
+                                <ArrowDownRight className={`w-4 h-4 ${colorClass}`} />
+                              ) : (
+                                <TrendingUp className={`w-4 h-4 ${colorClass}`} />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground text-sm truncate">
+                                {tx.investment?.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {isDeposit ? 'Aporte' : isWithdraw ? 'Resgate' : 'Rendimento'}
+                                {tx.description && ` • ${tx.description}`}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {tx.investment?.name}
+                          <div className="text-right shrink-0">
+                            <p className={`font-semibold text-sm ${colorClass}`}>
+                              {isWithdraw ? '-' : '+'}
+                              {formatCurrency(Number(tx.amount))}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              {tx.type === 'deposit'
-                                ? 'Aporte'
-                                : tx.type === 'withdrawal'
-                                ? 'Resgate'
-                                : 'Rendimento'}
-                              {tx.description && ` • ${tx.description}`}
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(tx.date)}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p
-                            className={`font-semibold ${
-                              tx.type === 'deposit'
-                                ? 'text-emerald-500'
-                                : tx.type === 'withdrawal'
-                                ? 'text-destructive'
-                                : 'text-primary'
-                            }`}
-                          >
-                            {tx.type === 'withdrawal' ? '-' : '+'}
-                            {formatCurrency(Number(tx.amount))}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(tx.date)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
